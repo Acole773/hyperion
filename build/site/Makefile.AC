@@ -1,0 +1,24 @@
+# Adam Cole local build settings
+CC := gcc
+LD := gcc # Use the gcc toolchain
+PYTHON := python3
+
+# Optimization flags
+GCCOPTS := -O3 -fno-math-errno -ffinite-math-only -frounding-math
+CFLAGS := -std=c99 -Wall -Wextra --pedantic $(GCCOPTS)
+
+# SIMD options
+# NOTE: this must not be := defined, as it has to reeval CFLAGS for SIZE def
+CFLAGS_SIMD = $(CFLAGS) -mavx512f \
+							 -march=native -D__HYPERION_USE_SIND
+# HDF5 custom include and link paths
+HDF5_INC = -I/usr/include/hdf5/serial
+HDF5_LIB = -L/usr/lib/x86_64-linux-gnu/hdf5/serial
+HDF5_STATIC = \
+    /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_hl.a \
+    /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.a
+HDF5_DEPS = -lcrypto -lcurl -lpthread -lsz -lz -ldl -lm
+
+# Linker settings
+LD_LIBS := $(HDF5_STATIC) $(HDF5_DEPS) -lc -L$(OBJECT_DIR) -l:libhyburn.a -lm
+LD_FLAGS :=

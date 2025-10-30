@@ -1,5 +1,5 @@
 # Makefile site specific declarations.
-SITE := default
+SITE := AC
 
 ROOTDIR := $(PWD)
 BUILD_DIR := $(ROOTDIR)/build
