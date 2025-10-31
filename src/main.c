@@ -67,9 +67,8 @@ void run_no_batch() {
 
     hyperion_init_();
 
-    fprintf(pfile, "This is a test.\n"); //AC
-    fprintf(pfile, "Value of pi ≈ %.5f\n", 3.14159); //AC
-						     //
+    tickertape_log("This is a test.");
+    tickertape_log("Value of pi ≈ %.5f", 3.14159);
 
     memcpy(xin, x, size * sizeof(double));
 

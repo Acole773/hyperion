@@ -1,0 +1,43 @@
+# Tickertape Makefile Notes for Hyperion Project
+# Key issues: global debug logging, tickertape.o compilation, directory creation
+
+# 1. Global directories
+ROOTDIR := $(PWD)
+BUILD_DIR := $(ROOTDIR)/build
+OBJECT_DIR := $(ROOTDIR)/object
+SOURCE_DIR := $(ROOTDIR)/src
+DEBUG_DIR := $(SOURCE_DIR)/debug
+DEBUG_OBJ_DIR := $(OBJECT_DIR)/debug
+
+# Ensure headers are visible
+CFLAGS += -I$(SOURCE_DIR)/debug
+
+# 2. Include site-specific makefile
+SITE := AC
+include $(BUILD_DIR)/site/Makefile.$(SITE)
+
+# 3. Build directories (only one rule, must create debug subdir)
+builddir:
+	mkdir -p $(OBJECT_DIR) $(DEBUG_OBJ_DIR)
+
+# 4. libhyburn static library rule (example)
+libhyburn: builddir
+	$(CC) -c $(SOURCE_DIR)/core/init.c -o $(OBJECT_DIR)/init.o $(CFLAGS) -fPIC
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/init.o
+	$(CC) -c $(SOURCE_DIR)/core/bn_burner.c -o $(OBJECT_DIR)/bn_burner.o $(CFLAGS) -fPIC
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/bn_burner.o
+	...
+	$(CC) -c $(SOURCE_DIR)/debug/tickertape.c -o $(OBJECT_DIR)/debug/tickertape.o $(CFLAGS) -fPIC
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/debug/tickertape.o
+
+# 5. Key notes / troubleshooting
+# - Only one builddir: multiple definitions overwrite each other in Make
+# - Tab character required for all command lines in Makefile
+# - mkdir -p ensures /object/debug exists to prevent:
+#   "Fatal error: can't create .../object/debug/tickertape.o: No such file or directory"
+# - After changes: run `make clean` then `make libhyburn`
+# - tickertape.o will then compile and link correctly
+# - Include tickertape.h in any .c using tickertape_log, tickertape_init, tickertape_close
+
+# Keywords for recall: tickertape, debug logging, hyperion, libhyburn.a, object/debug, builddir, mkdir -p, CFLAGS, include, gcc, ar rvs, static library, linker errors, undefined reference.
+
