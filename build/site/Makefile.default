@@ -1,10 +1,21 @@
+# c
 CC := gcc
-LD := gcc # Use the gcc toolchain
-PYTHON := python3
 GCCOPTS := -O3 -fno-math-errno -ffinite-math-only -frounding-math
 CFLAGS := -std=c99 -Wall -Wextra --pedantic $(GCCOPTS)
-# NOTE: this must not be := defined, as it has to reeval CFLAGS for SIZE def
-CFLAGS_SIMD = $(CFLAGS) -mavx512f \
-							 -march=native -D__HYPERION_USE_SIND
-LD_LIBS := -lm -lhdf5 -lc -L$(OBJECT_DIR) -l:libhyburn.a 
+
+# SIMD
+CFLAGS_SIMD := -mavx512f -march=native -D__HYPERION_USE_SIMD
+
+# linker ld 
+LD := gcc # Use the gcc toolchain
+LD_LIBS := -lm -L$(OBJECT_DIR) -l:libhyburn.a 
 LD_FLAGS := 
+
+# python
+PYTHON := python3
+
+# hip rocm
+HIPCC := hipcc
+HIPLD := hipcc
+CFLAGS_GPU := 
+LD_FLAGS_GPU :=

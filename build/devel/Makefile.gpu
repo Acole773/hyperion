@@ -1,0 +1,19 @@
+gpu_test: CFLAGS += -DSIZE=16 # temporarily assume 16 size
+gpu_test: LD_FLAGS += $(LD_FLAGS_GPU)
+gpu_test: libhyburn_gpu
+	$(CC) -c $(SOURCE_DIR)/main_gpu.c -o $(OBJECT_DIR)/main.o $(CFLAGS) 
+	$(HIPLD) $(OBJECT_DIR)/main.o -o $(OBJECT_DIR)/gpu_test $(LD_FLAGS) $(LD_LIBS)
+
+# NOTE: HIPCC insists on its own flags
+libhyburn_gpu: CFLAGS += $(CLAGS_GPU)
+libhyburn_gpu: libhyburn_base builddir
+	$(HIPCC) -c $(SOURCE_DIR)/gpu/hip.c -o $(OBJECT_DIR)/hip.o
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/hip.o
+	$(HIPCC) -c $(SOURCE_DIR)/gpu/hip_debug_kernel.hip -o \
+		$(OBJECT_DIR)/hip_debug_kernel.o
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/hip_debug_kernel.o
+	$(HIPCC) -c $(SOURCE_DIR)/core/bn_burner_gpu.hip -o \
+		$(OBJECT_DIR)/bn_burner_gpu_kernel.o
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/bn_burner_gpu_kernel.o
+	$(HIPCC) -c $(SOURCE_DIR)/core/bn_burner_gpu.c -o $(OBJECT_DIR)/bn_burner_gpu.o
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/bn_burner_gpu.o

@@ -83,12 +83,12 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
         for (int i = 0; i < f_plus_total; i++) {
             f_plus[i] = f_plus_factor[i] * flux[f_plus_map[i]];
         }
-        __DIAG_HALT("F+", "f_plus", f_plus, *size);
+        __DIAG_HALT("F+", "f_plus", f_plus, f_plus_total);
         
         for (int i = 0; i < f_minus_total; i++) {
             f_minus[i] = f_minus_factor[i] * flux[f_minus_map[i]];
         }
-        __DIAG_HALT("F+", "f_minus", f_minus, *size);
+        __DIAG_HALT("F+", "f_minus", f_minus, f_minus_total);
         
         for (int i = 0; i < num_species; i++) {
             // TODO: these dont change. We should determine them BEFORE

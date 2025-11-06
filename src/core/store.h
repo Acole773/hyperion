@@ -74,6 +74,9 @@ extern int* restrict f_plus_map;
 extern int* restrict f_minus_map;
 extern int** reaction_mask;
 
+// For GPU
+extern void** args;
+
 #ifdef __HYPERION_USE_SIMD
 #include <immintrin.h>
 #endif

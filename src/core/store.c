@@ -73,3 +73,8 @@ int* restrict f_plus_map;
 int* restrict f_minus_map;
 
 int** reaction_mask;
+
+// TODO: For GPU (this is unacceptably terrible for a number of reasons: mainly
+// that it cannot do more than 1 at a time, but we'll fix that later, I just
+// want it to fucking work right now so that I can do other stuff)
+void** args;

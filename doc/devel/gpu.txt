@@ -1,0 +1,23 @@
+*gpu.txt*
+
+                                   GPU / MP
+
+    HYPERION GPU documentation
+
+================================================================================
+TODO
+
+- Look into RCCL (gpu communication?)
+
+
+================================================================================
+SCHEME
+
+There exist two primary parallelization schemes we are testing: 
+- One block/workgroup computes one cell (traditional parallelization, like is
+  expected from most codes)
+- One thread computes one cell, with as many cells being computed as threads in a
+  block (unique, as our low-memory explicit code makes this feasible)
+
+================================================================================
+vim:tw=80:ft=help:norl:et:ts=2:sw=2:fen:fdl=0:
