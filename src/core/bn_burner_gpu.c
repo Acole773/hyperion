@@ -5,11 +5,48 @@
 #define __HIP_PLATFORM_AMD__
 #include <hip/hip_runtime.h>
 
-// We can ONLY allocate these values because they are different per-cell.
-// const int batchsize = 256; // TODO: set this based on proper batching
-const int batchsize = 1;
+// So that my LSP stops bugging me.
+#ifndef SIZE
+#define SIZE 16
+#endif
 
-int device_init() {
+#if SIZE == 16
+#define SIZE 16
+#define NUM_REACTIONS 48
+#define NUM_FLUXES_PLUS 72
+#define NUM_FLUXES_MINUS 72
+#endif
+
+#if SIZE == 150
+#define SIZE 150
+#define NUM_REACTIONS 1604
+#define NUM_FLUXES_PLUS 2710
+#define NUM_FLUXES_MINUS 2704
+#endif
+
+#if SIZE == 365
+// #define SIZE 365
+// #define NUM_REACTIONS 4395
+// #define NUM_FLUXES_PLUS 7429
+// #define NUM_FLUXES_MINUS 7420
+#endif
+
+// We can ONLY allocate these values because they are different per-cell.
+static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
+                                   double* xin, double* xout, double* sdotrate,
+                                   int zones);
+
+void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
+                      double* restrict xout, double* sdotrate,
+                      uchar* burned_zone, int* size) {
+
+    for (int i = 0; i < *size; i++) {
+        hyperion_burner_kernel(tstep, &temp[i], &dens[i], xin + (SIZE * i),
+        xout + (SIZE * i), &sdotrate[i], *size);
+    }
+}
+
+int device_init(int zones) {
 
     int error = 0;
 
@@ -96,15 +133,15 @@ int device_init() {
                        num_reactions * sizeof(int), hipMemcpyHostToDevice);
 
     error += hipMalloc(&args[BURNED_ZONE], 8);
-    error += hipMalloc(&args[TEMP], batchsize * sizeof(double));
-    error += hipMalloc(&args[DENS], batchsize * sizeof(double));
-    error += hipMalloc(&args[XIN], batchsize * num_species * sizeof(double));
-    error += hipMalloc(&args[XOUT], batchsize * num_species * sizeof(double));
-    error += hipMalloc(&args[SDOTRATE], batchsize * sizeof(double));
+    error += hipMalloc(&args[TEMP], zones * sizeof(double));
+    error += hipMalloc(&args[DENS], zones * sizeof(double));
+    error += hipMalloc(&args[XIN], zones * num_species * sizeof(double));
+    error += hipMalloc(&args[XOUT], zones * num_species * sizeof(double));
+    error += hipMalloc(&args[SDOTRATE], zones * sizeof(double));
 
     // "1" is how many vals there are
-    error += hipMalloc(&args[INT_VALS], batchsize * 1 * sizeof(int));
-    error += hipMalloc(&args[REAL_VALS], batchsize * 1 * sizeof(double));
+    error += hipMalloc(&args[INT_VALS], zones * 1 * sizeof(int));
+    error += hipMalloc(&args[REAL_VALS], zones * 1 * sizeof(double));
 
     if (error > 0) {
         return EXIT_FAILURE;
@@ -113,30 +150,28 @@ int device_init() {
     return EXIT_SUCCESS;
 }
 
-void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
-                      double* xout, double* sdotrate, uchar* burned_zone,
-                      int* size) {
+static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
+                                   double* xin, double* xout, double* sdotrate,
+                                   int zones) {
     int error;
 
     // hipMemcpy(args[BURNED_ZONE], 8);
-    hipMemcpy(args[TEMP], temp, batchsize * sizeof(double),
+    hipMemcpy(args[TEMP], temp, zones * sizeof(double), hipMemcpyHostToDevice);
+    hipMemcpy(args[DENS], dens, zones * sizeof(double), hipMemcpyHostToDevice);
+    hipMemcpy(args[XIN], xin, zones * num_species * sizeof(double),
               hipMemcpyHostToDevice);
-    hipMemcpy(args[DENS], dens, batchsize * sizeof(double),
+    hipMemcpy(args[XOUT], xout, zones * num_species * sizeof(double),
               hipMemcpyHostToDevice);
-    hipMemcpy(args[XIN], xin, batchsize * num_species * sizeof(double),
-              hipMemcpyHostToDevice);
-    hipMemcpy(args[XOUT], xout, batchsize * num_species * sizeof(double),
-              hipMemcpyHostToDevice);
-    hipMemcpy(args[SDOTRATE], sdotrate, batchsize * sizeof(double),
+    hipMemcpy(args[SDOTRATE], sdotrate, zones * sizeof(double),
               hipMemcpyHostToDevice);
 
     // "1" is how many vals there are
-    hipMemcpy(args[REAL_VALS], tstep, batchsize * 1 * sizeof(double),
+    hipMemcpy(args[REAL_VALS], tstep, zones * 1 * sizeof(double),
               hipMemcpyHostToDevice);
-    hipMemcpy(args[INT_VALS], size, batchsize * 1 * sizeof(int),
-              hipMemcpyHostToDevice);
+    // hipMemcpy(args[INT_VALS], NULL, zones * 1 * sizeof(int),
+    //           hipMemcpyHostToDevice);
 
-    struct dim3 blockdim = {128, 1, 1}; // Number of threads
+    struct dim3 blockdim = {256, 1, 1}; // Number of threads
     struct dim3 griddim = {1, 1, 1};    // Number of blocks
     // TODO: this is finding the total memory used by `__shared__` memory in the
     // kernel, but that is less than obvious and should be made more clear.
@@ -148,7 +183,8 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
         return;
     }
 
-    // TODO: this should be the exact number of args, not 100. (I'm a lazy bastard)
+    // TODO: this should be the exact number of args, not 100. (I'm a lazy
+    // bastard)
     void** trueargs = malloc(100 * sizeof(void*));
     for (int i = 0; i < 100; i++) {
         trueargs[i] = &args[i];
@@ -159,9 +195,9 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
 
     printf("%i: %s\n", error, hipGetErrorString(error));
 
-    hipMemcpy(xout, args[XOUT], batchsize * num_species * sizeof(double),
+    hipMemcpy(xout, args[XOUT], zones * num_species * sizeof(double),
               hipMemcpyDeviceToHost);
-    hipMemcpy(sdotrate, args[SDOTRATE], batchsize * sizeof(double),
+    hipMemcpy(sdotrate, args[SDOTRATE], zones * sizeof(double),
               hipMemcpyDeviceToHost);
 
     return;

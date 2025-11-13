@@ -13,11 +13,41 @@
 #define ZERO_FIX 1e-50
 #define THIRD 1.0 / 3.0
 
+// So that my LSP stops bugging me.
+#ifndef SIZE
+#define SIZE 16
+#endif
+
+#if SIZE == 16
+#define SIZE 16
+#define NUM_REACTIONS 48
+#define NUM_FLUXES_PLUS 72
+#define NUM_FLUXES_MINUS 72
+#endif
+
+#if SIZE == 150
+#define SIZE 150
+#define NUM_REACTIONS 1604
+#define NUM_FLUXES_PLUS 2710
+#define NUM_FLUXES_MINUS 2704
+#endif
+
+#if SIZE == 365
+#define SIZE 365
+#define NUM_REACTIONS 4395
+#define NUM_FLUXES_PLUS 7429
+#define NUM_FLUXES_MINUS 7420
+#endif
+
+static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
+                                   double* xin, double* restrict xout,
+                                   double* sdotrate);
+
 // Interpretation from Fortran call:
 //
 //   hyperion_burner(tstep, temp, dens, xin(:), xout(:), ..., size)
 //
-//   `size` refers to the size of the xin & xout vectors
+//   `size` refers to the number of cells
 //
 // I don't know what the other vars are...
 
@@ -25,15 +55,25 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
                       double* restrict xout, double* sdotrate,
                       uchar* burned_zone, int* size) {
 
-    memcpy(xout, xin, *size * sizeof(double));
+    for (int i = 0; i < *size; i++) {
+        hyperion_burner_kernel(tstep, &temp[i], &dens[i], xin + (SIZE * i),
+                               xout + (SIZE * i), &sdotrate[i]);
+    }
+}
+
+static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
+                                   double* xin, double* restrict xout,
+                                   double* sdotrate) {
+
 
     // We use the  XOUT memory, but our computation is with abundance (y)
     // Yes, this is confusing.
-    for (int i = 0; i < *size; i++) {
-        xout[i] = xout[i] / aa[i];
-    }
     
-    __DIAG_HALT("xin->xout", "xout", xout, *size);
+    for (int i = 0; i < SIZE; i++) {
+        xout[i] = xin[i] / aa[i];
+    }
+
+    __DIAG_HALT("xin->xout", "xout", xout, SIZE);
 
     double tmp = *temp / 1e9;
     double ddt_e = 0;
@@ -61,7 +101,7 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
     double dt = t * 1e-2;
 
     while (t < *tstep) {
-        
+
         __DIAG_HALT("Timestep", "dt", &dt, 1);
 
         for (int i = 0; i < num_reactions; i++) {
@@ -84,17 +124,17 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
             f_plus[i] = f_plus_factor[i] * flux[f_plus_map[i]];
         }
         __DIAG_HALT("F+", "f_plus", f_plus, f_plus_total);
-        
+
         for (int i = 0; i < f_minus_total; i++) {
             f_minus[i] = f_minus_factor[i] * flux[f_minus_map[i]];
         }
         __DIAG_HALT("F+", "f_minus", f_minus, f_minus_total);
-        
+
         for (int i = 0; i < num_species; i++) {
             // TODO: these dont change. We should determine them BEFORE
-            // integration. ESPECIALY since it's the biggest time-cost. If we do
-            // that, it may be possible to build a very optimized routine for
-            // it.
+            // integration. ESPECIALY since it's the biggest time-cost. If
+            // we do that, it may be possible to build a very optimized
+            // routine for it.
             int min_plus = 0;
             int min_minus = 0;
             if (i > 0) {
@@ -120,14 +160,14 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
                     (xout[i] + f_plus_sum[i] * dt) /
                     (1.0 + ((f_minus_sum[i] / (xout[i] + ZERO_FIX)) * dt));
 
-                // NOTE: FMA is slower here (I suspect due to the blocking of
-                // the accumulator)
+                // NOTE: FMA is slower here (I suspect due to the blocking
+                // of the accumulator)
             } else {
                 // Forward Euler update.
                 xout[i] += (f_plus_sum[i] - f_minus_sum[i]) * dt;
             }
         }
-        __DIAG_HALT("Y step", "xout", xout, *size);
+        __DIAG_HALT("Y step", "xout", xout, SIZE);
 
         // TODO: this continuous renormalization seems necessary, but it's
         // really not great for performance...
@@ -136,7 +176,7 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
             xout[i] = xout[i] * aa[i];
             normalfac += xout[i];
         }
-        
+
         normalfac = 1 / normalfac;
         __DIAG_HALT("Normalization", "normalfac", &normalfac, 1);
         for (int i = 0; i < num_species; i++) {
@@ -152,10 +192,10 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
         ddt_e += tmp * 9.5768e17; // Convert MeV/nucleon/s to erg/g/s
 
         t += dt;
-        dt = 1e-2 * t; // 1% acc code
+        dt = 1e-4 * t;
     }
 
-    for (int i = 0; i < *size; i++) {
+    for (int i = 0; i < SIZE; i++) {
         xout[i] = xout[i] * aa[i];
     }
 

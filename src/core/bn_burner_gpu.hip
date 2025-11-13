@@ -6,8 +6,6 @@
 #define __HIP_PLATFORM_AMD__
 #include <hip/hip_runtime.h>
 
-#define SIZE 16
-
 #if SIZE == 16
 #define SIZE 16
 #define NUM_REACTIONS 48
@@ -18,7 +16,6 @@
 #if SIZE == 150
 #define SIZE 150
 #define NUM_REACTIONS 1604
-// TODO: find the actual value for these...
 #define NUM_FLUXES_PLUS 2710
 #define NUM_FLUXES_MINUS 2704
 #endif
@@ -187,7 +184,7 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         // ddt_e += tmp * 9.5768e17; // Convert MeV/nucleon/s to erg/g/s
 
         t += dt;
-        dt = 1e-2 * t; // 1% acc code
+        dt = 1e-4 * t;
 
         __syncthreads();
     }

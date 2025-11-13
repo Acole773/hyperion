@@ -12,15 +12,16 @@
 // #include <immintrin.h> // Theoretically this is portable
 #include <x86intrin.h> // This is not
 
-// Exact same logic as the bn_burner.c file, but with SIMD
-//
-// NOTE: we are _strictly_ assuming size = 16
+#define SIMD_WIDTH 8
 
 #define ZERO_FIX 1e-50
 #define THIRD 1.0 / 3.0
 
-// TODO: unsure if we should use size of num_species...
-// I need to learn if __m512d _name[var] is acceptable now.
+// So that my LSP stops bugging me.
+#ifndef SIZE
+#define SIZE 16
+#endif
+
 #if SIZE == 16
 #define SIZE 16
 #define NUM_REACTIONS 48
@@ -31,7 +32,6 @@
 #if SIZE == 150
 #define SIZE 150
 #define NUM_REACTIONS 1604
-// TODO: find the actual value for these...
 #define NUM_FLUXES_PLUS 2710
 #define NUM_FLUXES_MINUS 2704
 #endif
@@ -43,18 +43,31 @@
 // #define NUM_FLUXES_MINUS 7420
 #endif
 
-// TODO: this is also defined in main.c, though it is more important here.
-// This is determined by how many of a precision can fit in the register:
-// so pd can fit 8 per SIMD vec, so batchcnt is 8
-#define BATCHCNT 8
+static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
+                                   double* xin, double* restrict xout,
+                                   double* sdotrate);
 
-// TODO: need to properly do BATCHCNT and precision, for now, just assume its 8
-// batched with double precision (cause it is)
-//
-//
 void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
                       double* restrict xout, double* sdotrate,
                       uchar* burned_zone, int* size) {
+
+    int rem = *size % SIMD_WIDTH;
+
+    for (int i = 0; i < *size / SIMD_WIDTH; i++) {
+        hyperion_burner_kernel(
+            tstep, &temp[i * SIMD_WIDTH], &dens[i * SIMD_WIDTH],
+            xin + (SIZE * i * SIMD_WIDTH), xout + (SIZE * i * SIMD_WIDTH),
+            &sdotrate[i * SIMD_WIDTH]);
+    }
+
+    // TODO: handle rem (non simd width encompassed values, so we have to pass
+    // nulls for values...) for (int i = 0; i < rem; i++) {
+    // }
+}
+
+static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
+                                   double* xin, double* restrict xout,
+                                   double* sdotrate) {
 
     // TODO: just like in the serial code, we call abundance X (mass frac)
     // because it's what is passed to the func.
@@ -79,9 +92,6 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
         _aa[i] = _mm512_set1_pd(aa[i]);
     }
 
-    // TODO: these will also need to be handed vectors of temps and densities,
-    // for now we assume they are all the same, but it will be loaded exactly
-    // like
     __m512d _temp = _mm512_loadu_pd(temp);
     _temp = _mm512_div_pd(_temp, _mm512_set1_pd(1e9));
     __m512d _dens = _mm512_loadu_pd(dens);
@@ -94,11 +104,11 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
     __m512d _tmp;
 
     for (int i = 0; i < SIZE; i++) {
-        // TODO: this is not what this will look like, it assumes xin is the
-        // same for all data... some helper func will need to adequately reshape
-        // this..
-        // I believe it will be a load instead of a set1. sdotrate does this...
-        _xout[i] = _mm512_set1_pd(xin[i]);
+        for (int j = 0; j < SIMD_WIDTH; j++) {
+            _xout[i][j] = xin[i + (SIZE * j)];
+        }
+    }
+    for (int i = 0; i < SIZE; i++) {
         _xout[i] = _mm512_div_pd(_xout[i], _aa[i]);
     }
 
@@ -110,7 +120,7 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
     // Ugh. I need import some libraries and whatnot for this...
     // This is good enough for now though
     __m512d _t93;
-    for (int i = 0; i < BATCHCNT; i++) {
+    for (int i = 0; i < SIMD_WIDTH; i++) {
         _t93[i] = cbrt(_temp[i]);
         _t5[i] = pow(_t93[i], 5);
         _t6[i] = log(_temp[i]);
@@ -128,7 +138,7 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
         __m512d _prefactor = _mm512_mul_pd(_mm512_set1_pd(prefactor[i]),
                                            _density[num_react_species[i] - 1]);
         // TODO: again, we need better SIMD here.
-        for (int j = 0; j < BATCHCNT; j++) {
+        for (int j = 0; j < SIMD_WIDTH; j++) {
             _tmp[j] = exp(p_0[i] + _t1[j] * p_1[i] + _t2[j] * p_2[i] +
                           _t93[j] * p_3[i] + _temp[j] * p_4[i] +
                           _t5[j] * p_5[i] + _t6[j] * p_6[i]);
@@ -248,7 +258,7 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
     // This is my greatest sin.
     for (int i = 0; i < SIZE; i++) {
         _xout[i] = _mm512_mul_pd(_aa[i], _xout[i]);
-        for (int j = 0; j < BATCHCNT; j++) {
+        for (int j = 0; j < SIMD_WIDTH; j++) {
             xout[i + (j * SIZE)] = _xout[i][j];
         }
     }

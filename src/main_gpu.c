@@ -3,7 +3,6 @@
 #include "core/kill.h"
 #include "core/store.h"
 #include "gpu/hip.h"
-#include "gpu/hip.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -14,22 +13,9 @@
 
 #include <x86intrin.h>
 
-// The choice for how long to warm up is complicated. It just needs to max the
-// thread's clock out. There's a lot that goes into this... but this is fine.
-// #define WARMUP 4096 * 10
-// #define AFRN 256 // "Arbitrary Fucking Run Number"
+#define BATCHCNT 8 // Number of zones to compute
 
-// For the big one
-// #define WARMUP 1024
-// #define AFRN 256
-
-// Testing and FEST
-#define WARMUP 0
-#define AFRN 1
-
-#define BATCHCNT 8
-
-int run_no_batch(void);
+int run_batch(void);
 
 int main() {
 
@@ -42,78 +28,76 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    if (run_no_batch() == EXIT_FAILURE) {
+    if (run_batch() == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
 }
 
-int run_no_batch(void) {
+int run_batch(void) {
     int size = SIZE;
 
-    double sdotrate;
-    uchar* burned_zone;
-
-    double* __scope_xin = malloc(size * sizeof(double) + 0x40);
-    double* __scope_xout = malloc(size * sizeof(double) + 0x40);
-    double* xin = (double*)(((uintptr_t)__scope_xin) + 0x3F & ~0x3F);
-    double* xout = (double*)(((uintptr_t)__scope_xout) + 0x3F & ~0x3F);
-
-    double temp = 5e09;
-    double dens = 1e08;
     double tstep = 1e-06;
+    uchar* burned_zone;
+    int* zone;
+    int* kstep;
+
+    double* _scope_xin = malloc((size * BATCHCNT) * sizeof(double) + 0x40);
+    double* _scope_xout = malloc((size * BATCHCNT) * sizeof(double) + 0x40);
+    double* _scope_sdotrate = malloc(BATCHCNT * sizeof(double) + 0x40);
+    double* xin = (double*)(((uintptr_t)_scope_xin) + 0x3F & ~0x3F);
+    double* xout = (double*)(((uintptr_t)_scope_xout) + 0x3F & ~0x3F);
+    double* sdotrate = (double*)(((uintptr_t)_scope_sdotrate) + 0x3F & ~0x3F);
+
+    double* temp = malloc(BATCHCNT * sizeof(double));
+    double* dens = malloc(BATCHCNT * sizeof(double));
 
     hyperion_init_();
 
-    memcpy(xin, x, size * sizeof(double));
-
-    // Assemble gpu shit (some of this should go in a )
-
-    // TODO: GPU warmup & check
-    args = malloc(100 * sizeof(void*)); // TODO: set this shit up
-    if (device_init() == EXIT_FAILURE) {
-        return EXIT_FAILURE;
-    }
-    
-    hipError_t error;
-    struct dim3 griddim = {1, 1, 1};
-    struct dim3 blockdim = {1, 1, 1};
-    
-    for (int i = 0; i < WARMUP; i++) {
-        hyperion_burner_(&tstep, &temp, &dens, xin, xout, &sdotrate,
-                         burned_zone, &size);
+    for (int i = 0; i < BATCHCNT; i++) {
+        memcpy(xin + (size * i), x, size * sizeof(double));
+        temp[i] = 5e09;
+        dens[i] = 1e08;
     }
 
-    // TODO: this timing code is buggy on the best of days...
+    int zones = BATCHCNT;
+
+    // "30" is just a guess at the number of args
+    args = malloc(30 * sizeof(void*));
+    device_init(zones);
+
+    // WARMUP
+    hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
+                     &zones);
+
     unsigned long long cycles = __rdtsc();
 
-    for (int i = 0; i < AFRN; i++) {
-        hyperion_burner_(&tstep, &temp, &dens, xin, xout, &sdotrate,
-                         burned_zone, &size);
-    }
+    hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
+                     &zones);
 
     unsigned long long cycles_ = __rdtsc();
 
-    printf("Total cycles per run (avg, rnded): %lld \n",
-           (cycles_ - cycles) / AFRN);
-
     printf("Result:\n");
 
-    double sum = 0;
     for (int i = 0; i < size; i++) {
-        printf("%2i %.5e\n", i, xout[i]);
-        sum += xout[i];
+        printf("%4i %.5e\n", i, xout[i]);
     }
     printf("\n");
-    printf("sdot: %.5e\n", sdotrate);
 
-    free(__scope_xin);
-    free(__scope_xout);
+    printf("Sdotrate for the batch.\n");
+    for (int i = 0; i < BATCHCNT; i++) {
+        printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
+    }
+
+    printf("Total cycles per run of batch (avg, rnded): %lld \n",
+           (cycles_ - cycles) / BATCHCNT);
+
+    free(_scope_xin);
+    free(_scope_xout);
+    free(_scope_sdotrate);
 
     _killall_ptrs();
-    _killall_ptrs_hipdev();
-    free(args);
 
     return EXIT_SUCCESS;
 }

@@ -32,7 +32,7 @@ libhyburn_serial: libhyburn_base
 	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/bn_burner.o
 	
 libhyburn_simd: libhyburn_base
-	$(CC) -c $(SOURCE_DIR)/core/bn_burner_SIMD.c -o $(OBJECT_DIR)/bn_burner.o $(CFLAGS_SIMD)
+	$(CC) -c $(SOURCE_DIR)/core/bn_burner_SIMD.c -o $(OBJECT_DIR)/bn_burner.o $(CFLAGS)
 	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/bn_burner.o
 	
 libhyburn_pec: libhyburn_base

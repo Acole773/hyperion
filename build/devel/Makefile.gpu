@@ -12,8 +12,10 @@ libhyburn_gpu: libhyburn_base builddir
 	$(HIPCC) -c $(SOURCE_DIR)/gpu/hip_debug_kernel.hip -o \
 		$(OBJECT_DIR)/hip_debug_kernel.o
 	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/hip_debug_kernel.o
+	# TODO: brother you _need_ to figure out the build system here,
+	# we cannot keep hacking shit together like this. We're better than that.
 	$(HIPCC) -c $(SOURCE_DIR)/core/bn_burner_gpu.hip -o \
-		$(OBJECT_DIR)/bn_burner_gpu_kernel.o
+		$(OBJECT_DIR)/bn_burner_gpu_kernel.o -DSIZE=16
 	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/bn_burner_gpu_kernel.o
 	$(HIPCC) -c $(SOURCE_DIR)/core/bn_burner_gpu.c -o $(OBJECT_DIR)/bn_burner_gpu.o
 	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/bn_burner_gpu.o

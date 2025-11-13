@@ -45,7 +45,7 @@ enum KSR {
 
 typedef unsigned char uchar; // Boolean workaround for cython
 
-int device_init();
+int device_init(int zones);
 void _killall_ptrs_hipdev();
 
 void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
