@@ -1,0 +1,192 @@
+Running on host frontier07003
+Current working directory: /autofs/nccs-svm1_proj/ast218/hyperion
+Job started at: Wed Nov 19 11:52:36 AM EST 2025
+devices on system: 1
+device: 0 (23.936000 TFlops/s)
+using device: AMD Instinct MI250X
+arch: gfx90a:sramecc+:xnack-
+dedicated gpu: yes
+clock: 1700000
+compute units: 220
+estimated TFlops/s: 23.936000
+beginning benchmark (AMD Instinct MI250X)
+Output: {  0.000000  4.000000  12.000000  }
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+1: invalid argument
+Result:
+   0 5.68655e-317
+   1 5.68655e-317
+   2 0.00000e+00
+   3 -nan
+   4 3.16202e-322
+   5 1.05187e-320
+   6 5.16871e-317
+   7 5.38944e-317
+   8 0.00000e+00
+   9 0.00000e+00
+  10 3.91532e-317
+  11 3.91541e-317
+  12 5.09513e-317
+  13 5.09522e-317
+  14 3.95253e-322
+  15 5.14322e-321
+  16 4.33292e-317
+  17 5.45069e-317
+  18 0.00000e+00
+  19 0.00000e+00
+  20 -nan
+  21 5.28946e-317
+  22 -nan
+  23 5.39818e-317
+  24 -nan
+  25 5.90894e-317
+  26 -nan
+  27 3.34406e-317
+  28 -nan
+  29 5.09574e-317
+  30 -nan
+  31 3.91298e-317
+  32 -nan
+  33 3.58138e-317
+  34 -nan
+  35 -nan
+  36 -nan
+  37 5.50292e-317
+  38 -nan
+  39 3.64538e-317
+  40 -nan
+  41 4.37748e-317
+  42 -nan
+  43 3.80920e-317
+  44 -nan
+  45 5.61011e-317
+  46 -nan
+  47 5.39672e-317
+  48 -nan
+  49 4.36151e-317
+  50 -nan
+  51 4.37922e-317
+  52 -nan
+  53 4.33998e-317
+  54 -nan
+  55 5.28899e-317
+  56 -nan
+  57 5.29048e-317
+  58 -nan
+  59 4.35941e-317
+  60 -nan
+  61 3.23045e-317
+  62 -nan
+  63 4.36151e-317
+  64 -nan
+  65 3.92108e-317
+  66 -nan
+  67 3.93822e-317
+  68 -nan
+  69 4.37748e-317
+  70 -nan
+  71 2.40865e-317
+  72 -nan
+  73 4.99524e-317
+  74 -nan
+  75 3.80892e-317
+  76 -nan
+  77 3.86658e-317
+  78 -nan
+  79 3.58568e-317
+  80 -nan
+  81 -nan
+  82 -nan
+  83 5.39672e-317
+  84 -nan
+  85 3.36158e-317
+  86 -nan
+  87 4.45702e-317
+  88 -nan
+  89 3.35454e-317
+  90 -nan
+  91 3.64704e-317
+  92 -nan
+  93 3.91030e-317
+  94 -nan
+  95 3.64885e-317
+  96 -nan
+  97 3.58138e-317
+  98 -nan
+  99 4.50596e-317
+ 100 -nan
+ 101 6.10835e-317
+ 102 -nan
+ 103 4.50596e-317
+ 104 -nan
+ 105 5.30548e-317
+ 106 -nan
+ 107 3.92454e-317
+ 108 -nan
+ 109 5.98673e-317
+ 110 -nan
+ 111 3.58078e-317
+ 112 -nan
+ 113 4.46313e-317
+ 114 -nan
+ 115 4.37028e-317
+ 116 -nan
+ 117 3.59790e-317
+ 118 -nan
+ 119 3.35210e-317
+ 120 -nan
+ 121 5.52879e-317
+ 122 -nan
+ 123 5.50292e-317
+ 124 -nan
+ 125 4.39299e-317
+ 126 -nan
+ 127 5.64286e-317
+ 128 -nan
+ 129 3.58138e-317
+ 130 -nan
+ 131 5.64286e-317
+ 132 -nan
+ 133 3.91634e-317
+ 134 -nan
+ 135 3.35210e-317
+ 136 -nan
+ 137 4.33998e-317
+ 138 -nan
+ 139 4.46368e-317
+ 140 -nan
+ 141 3.35951e-317
+ 142 -nan
+ 143 3.93822e-317
+ 144 5.53354e-321
+ 145 7.11455e-322
+ 146 0.00000e+00
+ 147 0.00000e+00
+ 148 5.50798e-317
+ 149 2.40378e-317
+
+Sdotrate for the batch.
+sdot[0]: 0.00000e+00
+sdot[1]: 0.00000e+00
+sdot[2]: 0.00000e+00
+sdot[3]: 0.00000e+00
+sdot[4]: 0.00000e+00
+sdot[5]: 0.00000e+00
+sdot[6]: 0.00000e+00
+sdot[7]: 0.00000e+00
+Total cycles per run of batch (avg, rnded): 106852 
+Job finished at: Wed Nov 19 11:52:38 AM EST 2025

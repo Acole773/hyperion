@@ -1,0 +1,11 @@
+Think of your project like this:
+parse_data  →  hyperion_core  →  burner_cpu
+                                  burner_gpu
+                                      ↓
+                                  executables
+Each arrow means:
+target_link_libraries(A PUBLIC B)
+
+Static library rule!
+	If library A uses symbols from library B,
+	then A must link against B — not the final executable.

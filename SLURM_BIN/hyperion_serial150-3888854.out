@@ -1,0 +1,6 @@
+Running on host frontier09397
+Current working directory: /autofs/nccs-svm1_proj/ast218/hyperion
+Job started at: Wed Nov 12 01:23:24 PM EST 2025
+srun: error: frontier09397: task 0: Illegal instruction (core dumped)
+srun: Terminating StepId=3888854.0
+Job finished at: Wed Nov 12 01:23:25 PM EST 2025

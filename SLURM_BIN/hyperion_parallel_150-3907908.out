@@ -1,0 +1,58 @@
+Running on host frontier08511
+Current working directory: /autofs/nccs-svm1_proj/ast218/hyperion
+Job started at: Wed Nov 19 10:25:45 AM EST 2025
+devices on system: 1
+device: 0 (23.936000 TFlops/s)
+using device: AMD Instinct MI250X
+arch: gfx90a:sramecc+:xnack-
+dedicated gpu: yes
+clock: 1700000
+compute units: 220
+estimated TFlops/s: 23.936000
+beginning benchmark (AMD Instinct MI250X)
+Output: {  0.000000  4.000000  12.000000  }
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+0: no error
+Result:
+   0 5.34007e-04
+   1 6.25510e-04
+   2 3.34087e-01
+   3 5.77603e-04
+   4 6.95086e-02
+   5 4.97808e-01
+   6 9.04689e-02
+   7 6.30600e-03
+   8 8.34186e-05
+   9 2.31176e-07
+  10 1.15733e-10
+  11 8.76165e-15
+  12 2.59248e-19
+  13 2.35607e-24
+  14 1.10805e-29
+  15 1.04435e-34
+
+Sdotrate for the batch.
+sdot[0]: 0.00000e+00
+sdot[1]: 0.00000e+00
+sdot[2]: 0.00000e+00
+sdot[3]: 0.00000e+00
+sdot[4]: 0.00000e+00
+sdot[5]: 0.00000e+00
+sdot[6]: 0.00000e+00
+sdot[7]: 0.00000e+00
+Total cycles per run of batch (avg, rnded): 38932991522 
+Job finished at: Wed Nov 19 10:30:59 AM EST 2025
