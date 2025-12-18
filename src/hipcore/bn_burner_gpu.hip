@@ -29,12 +29,12 @@
 
 extern "C" __global__ void hyperion_burner_dev_kernel(
     double* temp, double* dens, double* xin, double* xout, double* sdotrate,
-    unsigned char* burned_zone, double* prefactor, double* p_0, double* p_1,
+    double* prefactor, double* p_0, double* p_1,
     double* p_2, double* p_3, double* p_4, double* p_5, double* p_6, double* aa,
     double* q_value, int* reactant_1, int* reactant_2, int* reactant_3,
     int* f_plus_map, int* f_minus_map, double* f_plus_factor,
     double* f_minus_factor, int* f_plus_max, int* f_minus_max,
-    int* num_react_species, int* int_vals, double* real_vals) {
+    int* num_react_species, double* real_vals) {
 
     // xout = xin;
     // No need to separate since we are only GPU. This does both transfer and

@@ -1,4 +1,5 @@
 #include "store.h"
+#include "restrict.h"
 
 int num_reactions;
 int num_species;
@@ -6,8 +7,7 @@ int num_species;
 char** reaction_label;
 char** iso_label;
 
-// TODO: restrict properly
-int* restrict rg_member_idx;
+int* HYP_RESTRICT rg_member_idx;
 int* rg_class;
 int* reaction_library_class;
 int* num_react_species;
@@ -15,12 +15,12 @@ int* num_products;
 int* is_ec;
 int* is_reverse;
 
-int* restrict reactant_1;
-int* restrict reactant_2;
-int* restrict reactant_3;
+int* HYP_RESTRICT reactant_1;
+int* HYP_RESTRICT reactant_2;
+int* HYP_RESTRICT reactant_3;
 
-double* restrict rate;
-double* restrict flux;
+double* HYP_RESTRICT rate;
+double* HYP_RESTRICT flux;
 double* q_value;
 double* p_0;
 double* p_1;
@@ -51,30 +51,27 @@ double* partition_func_temp;
 int f_plus_total;
 int f_minus_total;
 
-double* restrict f_plus;
-double* restrict f_minus;
-double* restrict f_plus_factor;
-double* restrict f_minus_factor;
-double* restrict f_plus_sum;
-double* restrict f_minus_sum;
-double* restrict prefactor;
+double* HYP_RESTRICT f_plus;
+double* HYP_RESTRICT f_minus;
+double* HYP_RESTRICT f_plus_factor;
+double* HYP_RESTRICT f_minus_factor;
+double* HYP_RESTRICT f_plus_sum;
+double* HYP_RESTRICT f_minus_sum;
+double* HYP_RESTRICT prefactor;
 
-int* restrict f_plus_max;
-int* restrict f_plus_min;
-int* restrict f_minus_max;
-int* restrict f_minus_min;
-int* restrict f_plus_isotope_cut;
-int* restrict f_minus_isotope_cut;
-int* restrict f_plus_num;
-int* restrict f_minus_num;
-int* restrict f_plus_isotope_idx;
-int* restrict f_minus_isotope_idx;
-int* restrict f_plus_map;
-int* restrict f_minus_map;
+int* HYP_RESTRICT f_plus_max;
+int* HYP_RESTRICT f_plus_min;
+int* HYP_RESTRICT f_minus_max;
+int* HYP_RESTRICT f_minus_min;
+int* HYP_RESTRICT f_plus_isotope_cut;
+int* HYP_RESTRICT f_minus_isotope_cut;
+int* HYP_RESTRICT f_plus_num;
+int* HYP_RESTRICT f_minus_num;
+int* HYP_RESTRICT f_plus_isotope_idx;
+int* HYP_RESTRICT f_minus_isotope_idx;
+int* HYP_RESTRICT f_plus_map;
+int* HYP_RESTRICT f_minus_map;
 
 int** reaction_mask;
 
-// TODO: For GPU (this is unacceptably terrible for a number of reasons: mainly
-// that it cannot do more than 1 at a time, but we'll fix that later, I just
-// want it to fucking work right now so that I can do other stuff)
-void** args;
+

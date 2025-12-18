@@ -13,8 +13,7 @@ target_compile_definitions(hyperion_core
     PUBLIC SIZE=${SIZE}
 )
 target_link_libraries(hyperion_core
-    PUBLIC
-        hyperion_parse
+	PUBLIC parse_data
 )
 #target_compile_definitions(core PUBLIC SIZE=${SIZE})
 

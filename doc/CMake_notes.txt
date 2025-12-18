@@ -9,3 +9,16 @@ target_link_libraries(A PUBLIC B)
 Static library rule!
 	If library A uses symbols from library B,
 	then A must link against B — not the final executable.
+
+
+/**********************************************/
+
+Recommended directory semantics (production-grade)
+| Directory     | Meaning                | Condition       |
+| ------------- | ---------------------- | --------------- |
+| `core/`       | Physics, data, network | Always          |
+| `parse-data/` | File parsing           | Always          |
+| `cpu/`        | CPU kernels            | Always          |
+| `gpu/`        | GPU-agnostic glue      | Optional        |
+| `hipcore/`    | HIP kernels            | `ENABLE_GPU=ON` |
+
