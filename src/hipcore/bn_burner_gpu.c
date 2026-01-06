@@ -275,7 +275,7 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     return;
 }
 
-void _killall_ptrs_hipdev() {
+void hip_killall_device_ptrs() {
     int error = 0;
     error += hipFree(args.temp);
     error += hipFree(args.dens);

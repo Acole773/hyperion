@@ -15,7 +15,10 @@
 #SBATCH --gres=gpu:1                  # <-- You MUST request a GPU
 #SBATCH --exclusive                   # Optional: full node for debugging
 
-### Load environment needed for HIP builds
+
+# =========================
+# Environment
+# =========================
 module purge                           # <-- ALWAYS purge first on Frontier
 
 module load PrgEnv-amd                 # AMD compiler environment
@@ -24,7 +27,19 @@ module load craype-accel-amd-gfx90a    # Correct GPU target
 module load hdf5/1.14.5-mpi            # HDF5 if needed
 #module load darshan-runtime/3.4.7-mpi  # Darshan handles I/O for Frontier
 
-# Print some diagnostic info
+# =========================
+# Run directory
+# =========================
+BASE=/ccs/proj/ast218/hyperion
+RUN_ID=$(date +%Y%m%d_%H%M%S)
+RESULTS_DIR=$BASE/results/frontier/hip/$RUN_ID
+
+mkdir -p $RESULTS_DIR
+cd $RESULTS_DIR
+
+# =========================
+# Diagnostics
+# =========================
 echo "Running on host $(hostname)"
 echo "Current working directory: $(pwd)"
 echo "Job started at: $(date)"
@@ -36,8 +51,11 @@ echo "Job started at: $(date)"
 #echo "------ HIPCONFIG ------"
 #srun hipconfig
 
-# Run the executable
-srun ./build-frontier-hip/src/hyperion_test
+# =========================
+# Run
+# =========================
+cp $BASE/build-frontier-hip/src/hyperion_test .
+srun ./hyperion_test
 
 echo "Job finished at: $(date)"
 

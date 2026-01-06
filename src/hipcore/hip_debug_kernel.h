@@ -1,7 +1,6 @@
 #ifndef __HIP_DEBUG_KERNEL_H
 #define __HIP_DEBUG_KERNEL_H
 
-#define __HIP_PLATFORM_AMD__
 #include <hip/hip_runtime.h>
 
 #ifdef __cplusplus

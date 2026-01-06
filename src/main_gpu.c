@@ -1,8 +1,8 @@
-#include "hipcore/bn_burner_gpu.h"
+#include "gpu/gpu_backend.h"
+
 #include "core/init.h"
 #include "core/kill.h"
 #include "core/store.h"
-#include "gpu/hip.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -19,12 +19,7 @@ int run_batch(void);
 
 int main() {
 
-    struct hipDeviceProp_t* hip_device = get_hip_device();
-    if (hip_device == NULL) {
-        return EXIT_FAILURE;
-    }
-
-    if (test_device(hip_device) == EXIT_FAILURE) {
+    if (gpu_backend_init(BATCHCNT) == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
 
@@ -32,6 +27,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    gpu_backend_finalize();
     return EXIT_SUCCESS;
 }
 
@@ -39,7 +35,7 @@ int run_batch(void) {
     int size = SIZE;
 
     double tstep = 1e-06;
-    uchar* burned_zone;
+    unsigned char* burned_zone;
     int* zone;
     int* kstep;
 
@@ -63,15 +59,17 @@ int run_batch(void) {
 
     int zones = BATCHCNT;
 
-    device_init(zones);
-
+    if (gpu_backend_init(zones) != EXIT_SUCCESS) {
+        fprintf(stderr, "GPU backend init failed\n");
+        return EXIT_FAILURE;
+    }
     // WARMUP
-    hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
+    gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &zones);
 
     unsigned long long cycles = __rdtsc();
 
-    hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
+    gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &zones);
 
     unsigned long long cycles_ = __rdtsc();

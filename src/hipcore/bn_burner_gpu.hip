@@ -3,7 +3,6 @@
 #define ZERO_FIX 1e-50
 #define THIRD 1.0 / 3.0
 
-#define __HIP_PLATFORM_AMD__
 #include <hip/hip_runtime.h>
 
 #if SIZE == 16

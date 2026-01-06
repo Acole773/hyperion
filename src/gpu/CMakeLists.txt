@@ -1,38 +1,36 @@
-# gpu target library (HIP or CUDA)
-if(USE_GPU STREQUAL "HIP")
-  # compiles .hip with HIP
-  enable_language(HIP)
+add_library(gpu_backend
+    gpu_backend.c
+)
 
-	add_library(burner_gpu
-    	bn_burner_gpu.hip # HIP kernel
-    	bn_burner_gpu.c   # wrapper / launcher
-	hip.c 
-	)
+target_include_directories(gpu_backend
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src
+)
+target_include_directories(gpu_backend
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_link_libraries(gpu_backend
+    PUBLIC burner_gpu   # HIP or CUDA implementation
+)
 
-	target_include_directories(burner_gpu
-    	PUBLIC
-        	${CMAKE_CURRENT_SOURCE_DIR}
-        	${PROJECT_SOURCE_DIR}/core
-	)
+# Backend selection
+if(ENABLE_GPU)
+    target_compile_definitions(gpu_backend PUBLIC ENABLE_GPU)
 
-	target_link_libraries(burner_gpu
-    		PRIVATE hyperion_core
-	)
+    if(USE_GPU STREQUAL "HIP")
+        target_compile_definitions(gpu_backend PUBLIC USE_HIP)
+        target_link_libraries(gpu_backend PUBLIC burner_gpu)
 
-	# HIP needs C++
-	set_target_properties(burner_gpu PROPERTIES
-    		HIP_STANDARD 14
-    		CXX_STANDARD 14
-	)
+    elseif(USE_GPU STREQUAL "CUDA")
+        target_compile_definitions(gpu_backend PUBLIC USE_CUDA)
+        target_link_libraries(gpu_backend PUBLIC burner_cuda)
 
-  # pass HIP-specific compile options if needed
-elseif(USE_GPU STREQUAL "CUDA")
-  add_library(burner_gpu STATIC hip_wrapper.cpp bn_burner_gpu.cu)
-  target_compile_definitions(burner_gpu PUBLIC SIZE=${SIZE})
-  target_include_directories(burner_gpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-  target_link_libraries(burner_gpu PUBLIC core)
+    endif()
+
 else()
-  add_library(burner_gpu INTERFACE) # no GPU
-  target_link_libraries(burner_gpu INTERFACE burner_cpu)
+    # CPU-only
+    target_link_libraries(gpu_backend PUBLIC burner_cpu)
 endif()
+
+target_compile_features(gpu_backend PUBLIC c_std_11)
 

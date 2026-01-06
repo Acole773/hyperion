@@ -53,7 +53,8 @@ enum KSR {
 
 typedef unsigned char uchar; // Boolean workaround for cython
 
-void _killall_ptrs_hipdev();
+void hip_killall_device_ptrs(void);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

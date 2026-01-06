@@ -1,5 +1,29 @@
 #include "hip.h"
 #include "hip_debug_kernel.h"
+#include <hip/hip_runtime.h>
+#include <stdio.h>
+
+int hip_backend_init(int zones)
+{
+    int deviceCount = 0;
+    hipGetDeviceCount(&deviceCount);
+
+    if (deviceCount == 0) {
+        fprintf(stderr, "No HIP devices found\n");
+        return EXIT_FAILURE;
+    }
+
+    hipDeviceProp_t prop;
+    hipGetDeviceProperties(&prop, 0);
+
+    printf("Using HIP device: %s\n", prop.name);
+    return EXIT_SUCCESS;
+}
+
+int hip_backend_finalize(void)
+{
+    // optional cleanup
+}
 
 struct hipDeviceProp_t* get_hip_device() {
     int num_devices = 0;
