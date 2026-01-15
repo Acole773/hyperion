@@ -1,0 +1,125 @@
+Running on host frontier09086
+Current working directory: /ccs/proj/ast218/hyperion/results/frontier/hip/20260115_152947
+Job started at: Thu Jan 15 03:29:47 PM EST 2026
+>>> ENTERED MAIN <<<
+MAIN: before gpu_backend_init
+INIT: rate_library_create(/ccs/proj/ast218/hyperion/data/ratelibrary-alpha.txt)
+INIT: network_create(/ccs/proj/ast218/hyperion/data/network-alpha.txt)
+CWD = /autofs/nccs-svm1_proj/ast218/hyperion/results/frontier/hip/20260115_152947
+Trying to open file = /ccs/proj/ast218/hyperion/data/ratelibrary-alpha.txt
+GPU_BACKEND_INIT (HIP) entered
+hipGetDeviceCount returned 1 devices, err=0
+Selected device 0
+DEVICE_INIT entered (zones=8)
+HYPERION_BURNER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+HYPERION_BURNER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+KERNEL WRAPPER entered
+Initializing Hyperion...
+Hyperion initialized.
+Starting GPU backend init...
+Selected HIP device 0
+[bn_burner_gpu] device_init called with zones=8
+[bn_burner_gpu] device_init completed successfully.
+GPU backend init done.
+Starting run_batch...
+Allocating host arrays...
+Host arrays allocated.
+Copying initial conditions into xin...
+Initial conditions copied.
+Launching GPU burner kernel (warmup)...
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+Result:
+   0 1.33502e-04
+   1 5.21259e-05
+   2 2.08804e-02
+   3 2.88802e-05
+   4 2.89619e-03
+   5 1.77789e-02
+   6 2.82716e-03
+   7 1.75167e-04
+   8 2.08547e-06
+   9 5.25401e-09
+  10 2.41111e-12
+  11 1.68493e-16
+  12 4.62944e-21
+  13 3.92678e-26
+  14 1.73133e-31
+  15 1.53582e-36
+
+Sdotrate for the batch.
+sdot[0]: 7.76921e+12
+sdot[1]: 7.76921e+12
+sdot[2]: 7.76921e+12
+sdot[3]: 7.76921e+12
+sdot[4]: 7.76921e+12
+sdot[5]: 7.76921e+12
+sdot[6]: 7.76921e+12
+sdot[7]: 7.76921e+12
+Total cycles per run of batch (avg, rnded): 40547748350 
+run_batch done.
+Finalizing GPU backend...
+[bn_burner_gpu] All device pointers freed.
+GPU backend finalize done.
+Job finished at: Thu Jan 15 03:35:14 PM EST 2026

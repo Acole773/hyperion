@@ -35,165 +35,181 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     double* f_minus_factor, int* f_plus_max, int* f_minus_max,
     int* num_react_species, double* real_vals) {
 
-    // xout = xin;
-    // No need to separate since we are only GPU. This does both transfer and
-    // set.
-    int n = threadIdx.x;
-    int i = n; // for loop on threads
-    // if (n > 0) {
-    // return;
-    // }
+    const int tid = threadIdx.x;
 
-    // for (int i = 0; i < SIZE; i++) {
-    if (i < SIZE) {
-        xout[i] = xin[i] / aa[i];
-    }
-
-    double tmp = temp[0] / 1e9;
-    double ddt_e = 0;
-
-    double t93 = pow(tmp, THIRD);
-    double t1 = 1 / tmp;
-    double t2 = 1 / t93;
-    double t3 = t93;
-    double t4 = tmp;
-    double t5 = t93 * t93 * t93 * t93 * t93;
-    double t6 = log(tmp);
-
-    double density[3] = {1.0, dens[0], (dens[0]) * (dens[0])};
-
-    // double rate[NUM_REACTIONS];
-    // double flux[NUM_REACTIONS];
-    // double f_plus[NUM_FLUXES_PLUS];
-    // double f_minus[NUM_FLUXES_MINUS];
-    // double f_plus_sum[SIZE];
-    // double f_minus_sum[SIZE];
+    // ------------------------------------------------------------
+    // Shared memory
+    // ------------------------------------------------------------
     __shared__ double rate[NUM_REACTIONS];
     __shared__ double flux[NUM_REACTIONS];
     __shared__ double f_plus[NUM_FLUXES_PLUS];
     __shared__ double f_minus[NUM_FLUXES_MINUS];
     __shared__ double f_plus_sum[SIZE];
     __shared__ double f_minus_sum[SIZE];
+    __shared__ double norm_sum;
+    __shared__ double energy_sum;
+
+    __shared__ double reduce_buf[1024];  // must be >= blockDim.x
+
+
+
+    // ------------------------------------------------------------
+    // Initial normalization: xout = xin / aa
+    // ------------------------------------------------------------
+    if (tid < SIZE)
+        xout[tid] = xin[tid] / aa[tid];
+
+    // ------------------------------------------------------------
+    // Thermodynamic precompute
+    // ------------------------------------------------------------
+    double tmp = temp[0] * 1e-9;
+    double t93 = pow(tmp, THIRD);
+
+    double t1 = 1.0 / tmp;
+    double t2 = 1.0 / t93;
+    double t3 = t93;
+    double t4 = tmp;
+    double t5 = pow(t93, 5);
+    double t6 = log(tmp);
+
+    double density[3] = {
+        1.0,
+        dens[0],
+        dens[0] * dens[0]
+    };
 
     __syncthreads();
 
-    // for (int i = 0; i < NUM_REACTIONS; i++) {
-    if (i < NUM_REACTIONS) {
-        double prefactor_ = prefactor[i] * density[num_react_species[i] - 1];
-        rate[i] =
-            prefactor_ * exp(p_0[i] + t1 * p_1[i] + t2 * p_2[i] + t3 * p_3[i] +
-                             t4 * p_4[i] + t5 * p_5[i] + t6 * p_6[i]);
+    // ------------------------------------------------------------
+    // Rate evaluation
+    // ------------------------------------------------------------
+    if (tid < NUM_REACTIONS) {
+        int ns = num_react_species[tid] - 1;
+        rate[tid] =
+            prefactor[tid] * density[ns] *
+            exp(p_0[tid]
+              + p_1[tid] * t1
+              + p_2[tid] * t2
+              + p_3[tid] * t3
+              + p_4[tid] * t4
+              + p_5[tid] * t5
+              + p_6[tid] * t6);
     }
+    __syncthreads();
 
-
-    double t = 1e-20;
-    double dt = t * 1e-2;
-
+    // ------------------------------------------------------------
+    // Time integration
+    // ------------------------------------------------------------
+    double t     = 1e-20;
+    double dt    = t * 1e-2;
     double tstep = real_vals[KSR_TSTEP];
 
     while (t < tstep) {
 
-        // for (int i = 0; i < NUM_REACTIONS; i++) {
-        if (i < NUM_REACTIONS) {
-            switch (num_react_species[i]) {
-            case 1:
-                flux[i] = rate[i] * xout[reactant_1[i]];
-                break;
-            case 2:
-                flux[i] = rate[i] * xout[reactant_1[i]] * xout[reactant_2[i]];
-                break;
-            case 3:
-                flux[i] = rate[i] * xout[reactant_1[i]] * xout[reactant_2[i]] *
-                          xout[reactant_3[i]];
-                break;
-            }
+
+        // --------------------------------------------------------
+        // Flux computation
+        // --------------------------------------------------------
+        if (tid < NUM_REACTIONS) {
+            double f = rate[tid];
+            if (num_react_species[tid] >= 1)
+                f *= xout[reactant_1[tid]];
+            if (num_react_species[tid] >= 2)
+                f *= xout[reactant_2[tid]];
+            if (num_react_species[tid] == 3)
+                f *= xout[reactant_3[tid]];
+            flux[tid] = f;
         }
 
         __syncthreads();
 
-        // for (int i = 0; i < NUM_FLUXES_PLUS; i++) {
-        if (i < NUM_FLUXES_PLUS) {
-            f_plus[i] = f_plus_factor[i] * flux[f_plus_map[i]];
-        }
+        // --------------------------------------------------------
+        // Expand fluxes
+        // --------------------------------------------------------
+        if (tid < NUM_FLUXES_PLUS)
+            f_plus[tid] = f_plus_factor[tid] * flux[f_plus_map[tid]];
 
-        // for (int i = 0; i < NUM_FLUXES_MINUS; i++) {
-        if (i < NUM_FLUXES_MINUS) {
-            f_minus[i] = f_minus_factor[i] * flux[f_minus_map[i]];
-        }
+        if (tid < NUM_FLUXES_MINUS)
+            f_minus[tid] = f_minus_factor[tid] * flux[f_minus_map[tid]];
 
         __syncthreads();
 
-        // for (int i = 0; i < SIZE; i++) {
-        if (i < SIZE) {
-            int min_plus = 0;
-            int min_minus = 0;
-            if (i > 0) {
-                min_plus = f_plus_max[i - 1] + 1;
-                min_minus = f_minus_max[i - 1] + 1;
-            }
-            f_plus_sum[i] = 0.0;
-            for (int j = min_plus; j <= f_plus_max[i]; j++) {
-                f_plus_sum[i] += f_plus[j];
-            }
-            f_minus_sum[i] = 0.0;
-            for (int j = min_minus; j <= f_minus_max[i]; j++) {
-                f_minus_sum[i] += f_minus[j];
-            }
-        }
-	
+        // --------------------------------------------------------
+        // Species updates
+        // --------------------------------------------------------
+        if (tid < SIZE) {
+            int p0 = (tid == 0) ? 0 : f_plus_max[tid - 1] + 1;
+            int m0 = (tid == 0) ? 0 : f_minus_max[tid - 1] + 1;
 
-        // for (int i = 0; i < SIZE; i++) {
-        if (i < SIZE) {
-            if (f_minus_sum[i] * dt > xout[i]) {
-                // Asympotic estimate.
-                xout[i] =
-                    (xout[i] + f_plus_sum[i] * dt) /
-                    (1.0 + ((f_minus_sum[i] / (xout[i] + ZERO_FIX)) * dt));
+            double plus  = 0.0;
+            double minus = 0.0;
 
-                // NOTE: FMA is slower here (I suspect due to the blocking of
-                // the accumulator)
+            for (int j = p0; j <= f_plus_max[tid]; ++j)
+                plus += f_plus[j];
+
+            for (int j = m0; j <= f_minus_max[tid]; ++j)
+                minus += f_minus[j];
+
+            if (minus * dt > xout[tid]) {
+                xout[tid] =
+                    (xout[tid] + plus * dt) /
+                    (1.0 + (minus / (xout[tid] + ZERO_FIX)) * dt);
             } else {
-                // Forward Euler update.
-                xout[i] += (f_plus_sum[i] - f_minus_sum[i]) * dt;
+                xout[tid] += (plus - minus) * dt;
             }
         }
 
-        // TODO: no renorm or ddt_e calc since they are unpleasant to parallelize. We will think about the best way to remedy that issue later.
-
-        // double normalfac = 0;
-        // // for (int i = 0; i < SIZE; i++) {
-        // if (i < SIZE) {
-        //     xout[i] = xout[i] * aa[i];
-        //     normalfac += xout[i];
-        // }
-        //
-        // normalfac = 1 / normalfac;
-        // // for (int i = 0; i < SIZE; i++) {
-        // if (i < SIZE) {
-        //     xout[i] = xout[i] * normalfac;
-        //     xout[i] = xout[i] / aa[i];
-        // }
-
-        // tmp = 0;
-        // // for (int i = 0; i < NUM_REACTIONS; i++) {
-        // if (i < NUM_REACTIONS) {
-        //     tmp += flux[i] * q_value[i];
-        // }
-        // tmp *= dt;
-        // ddt_e += tmp * 9.5768e17; // Convert MeV/nucleon/s to erg/g/s
+        __syncthreads();
 
         t += dt;
         dt = 1e-4 * t;
 
+    }
+
+    // ------------------------------------------------------------
+    // Final renormalization (block reduction)
+    // ------------------------------------------------------------
+    double local = 0.0;
+    if (tid < SIZE)
+        local = xout[tid] * aa[tid];
+
+    reduce_buf[tid] = local;
+    __syncthreads();
+
+    // Tree reduction
+    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (tid < stride)
+            reduce_buf[tid] += reduce_buf[tid + stride];
+       __syncthreads();
+    }
+
+    if (tid == 0)
+        norm_sum = 1.0 / reduce_buf[0];
+
+    __syncthreads();
+
+    if (tid < SIZE)
+        xout[tid] = (xout[tid] * aa[tid] * norm_sum) / aa[tid];
+
+
+
+    // ------------------------------------------------------------
+    // Energy generation (block reduction)
+    // ------------------------------------------------------------
+
+    double e_local = 0.0;
+    if (tid < NUM_REACTIONS)
+        e_local = flux[tid] * q_value[tid];
+
+    reduce_buf[tid] = e_local;
+    __syncthreads();
+
+    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+        if (tid < stride)
+            reduce_buf[tid] += reduce_buf[tid + stride];
         __syncthreads();
     }
 
-    // for (int i = 0; i < SIZE; i++) {
-    if (i < SIZE) {
-        xout[i] = xout[i] * aa[i];
-    }
-
-    sdotrate[0] = ddt_e;
-
-    return;
+    if (tid == 0)
+        sdotrate[0] = reduce_buf[0] * dt * 9.5768e17;
 }
