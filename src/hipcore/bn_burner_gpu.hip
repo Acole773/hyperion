@@ -115,6 +115,12 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     // Time integration
     // ------------------------------------------------------------
 
+    if (tid == 0) {
+        t  = 1e-20;
+        dt = t * 1e-2;
+    }
+    __syncthreads(); // Ensure every thread sees the initial t and dt
+
     while (t < tstep) {
 
 
@@ -156,11 +162,15 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
                 xout_zone[i] += (plus - minus) * dt;
             }
         }
-
-        __syncthreads();
-	if (tid == 0) {
-	    t  = 1e-20;
-	    dt = t * 1e-2;
+  	if (tid == 0) {
+            t += dt;              // ADVANCE time, do not reset it!
+        
+        dt = 1e-4 * t;        
+        
+        // 4. Boundary Condition (Safety check to not overshoot tstep)
+        if (t + dt > tstep) {
+            dt = tstep - t;
+        }
 	}
 	__syncthreads();
     }
