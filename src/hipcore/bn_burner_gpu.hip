@@ -44,10 +44,11 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     double rho = dens[zone];
     double tstep = real_vals[0];
 
+    double* aa_zone = aa;
+
     // Per-zone offsets
     double* xout_zone = xout + zone * SIZE;
     double* xin_zone  = xin  + zone * SIZE;
-    double* aa_zone   = aa   + zone * SIZE;
 
     // ------------------------------------------------------------
     // Shared memory
@@ -74,7 +75,7 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     double tmp = T * 1e-9;
     double t93 = pow(tmp, THIRD);
 
-    double t1 = 1.0 / tmp;
+    double t1 = 1.0 / (tmp + ZERO_FIX); //AC delete zero fix if no change
     double t2 = 1.0 / t93;
     double t3 = t93;
     double t4 = tmp;

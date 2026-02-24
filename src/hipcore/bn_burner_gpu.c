@@ -53,7 +53,7 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
     fprintf(stderr, "HYPERION_BURNER entered\n");
     fflush(stderr);
 
-        hyperion_burner_kernel(tstep, &temp[i], &dens[i], xin + (SIZE * i), xout + (SIZE * i), &sdotrate[i], *zones);
+        hyperion_burner_kernel(tstep, temp, dens, xin, xout, sdotrate, *zones);
 }
 
 // -----------------------------------------------------------------------------
