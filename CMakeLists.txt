@@ -17,7 +17,7 @@ endif()
 # -g: generates host debug symbols
 # -O0: disables optimization for both host and device
 # -ggdb: adds extra GDB-specific information
-set(CMAKE_HIP_FLAGS_DEBUG "-g -O0 -ggdb")
+set(CMAKE_HIP_FLAGS_DEBUG "-g -O0 -ggdb -fno-inline -fno-omit-frame-pointer ")
 
 add_compile_definitions(SIZE=${SIZE})
 

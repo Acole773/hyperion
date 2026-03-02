@@ -1,34 +1,37 @@
-# 1. Force the debugger to accept breakpoints on code not yet loaded (the GPU kernel)
 set breakpoint pending on
+set pagination off
+set print pretty on
+set print elements 8
+set print address off
 
-# 2. Setup breakpoints for the host wrapper and GPU kernel
-# Source [1]: The host entry point
 break hyperion_burner_
 break hyperion_burner_dev_kernel
 
-# 3. Start the program
 run
 
-# --- Debugger stops at hyperion_burner_ (Host) ---
 echo \n--- Reached Host Wrapper ---\n
-
-# 4. Continue execution to reach the GPU kernel
 continue
 
-# --- Debugger stops at hyperion_burner_dev_kernel (Device) ---
 echo \n--- Reached GPU Kernel ---\n
 
-# 5. NOW you can inspect kernel-specific variables
+# Lock to one lane
+lane 0
+
+# Print execution identity
+print blockIdx.x
+print threadIdx.x
+
+# Print zone
 print zone
-print tid
 
-# Inspect the suspected NaN source
-print aa_zone
-print xout_zone
+# Inspect data
+print aa[zone]
+print xout[zone][0]
+print xout[zone][1]
 
-# 6. Continue to the end
+# NaN checks
+print isnan(xout[zone][0])
+print isnan(xout[zone][1])
+
 continue
-
 quit
-
-
