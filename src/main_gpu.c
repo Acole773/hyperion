@@ -80,17 +80,17 @@ int run_batch(void) {
      *
      * *******************************/
 
-   /* printf("Copying initial conditions into xin...\n");
+    printf("Copying initial conditions into xin...\n");
     for (int i = 0; i < BATCHCNT; i++) {
         memcpy(xin + (size * i), x, size * sizeof(double));
         temp[i] = 5e09;
         dens[i] = 1e08;
     }
     printf("Initial conditions copied.\n");
-    */
+    
 
 
-    printf("Copying initial conditions into xin...\n");
+    /*printf("Copying initial conditions into xin...\n");
     srand((unsigned int)time(NULL));
 
     for (int i = 0; i < BATCHCNT; i++) {
@@ -107,7 +107,7 @@ int run_batch(void) {
         dens[i] = 1e08 * factor_D;
      }
     printf("Initial conditions copied.\n");
-
+*/
     
 
     /**********************************
