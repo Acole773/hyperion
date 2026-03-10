@@ -87,7 +87,7 @@ int run_batch(void) {
         dens[i] = 1e08;
     }
     printf("Initial conditions copied.\n");
-    
+     
 
 
     /*printf("Copying initial conditions into xin...\n");
@@ -110,6 +110,62 @@ int run_batch(void) {
 */
     
 
+/*--------------------------------------------------------------
+ *  GAUSSIAN PERTURBATION SCHEME FOR INITIAL CONDITIONS
+ *
+ *  Generates Gaussian aka normal perturbations for temperature
+ *  and density.
+ *
+ *      T_i   = 5e09 * (1 + delta_T)
+ *      rho_i = 1e08 * (1 + delta_D)
+ *
+ *  delta_T, delta_D ~ N(0, sigma), truncated to ±3σ.
+ *
+ *  Not sure if the truncation I did will cause a bunch-up at 3 sigma.
+ *--------------------------------------------------------------*/
+/*
+    printf("Copying initial conditions into xin (Gaussian)...\n");
+    srand((unsigned int)time(NULL));
+
+    // variable definitions grouped together
+    double sigma_T = 0.10;
+    double sigma_D = 0.10;
+
+    double u1, u2;
+    double z1, z2;
+    double delta_T, delta_D;
+
+    for (int i = 0; i < BATCHCNT; i++) {
+        memcpy(xin + (size * i), x, size * sizeof(double));
+
+    // Gaussian sample for temperature
+        u1 = ((double)rand() + 1.0) / ((double)RAND_MAX + 2.0);
+        u2 = ((double)rand() + 1.0) / ((double)RAND_MAX + 2.0);
+        z1 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+
+    // Gaussian sample for density
+        u1 = ((double)rand() + 1.0) / ((double)RAND_MAX + 2.0);
+        u2 = ((double)rand() + 1.0) / ((double)RAND_MAX + 2.0);
+        z2 = sqrt(-2.0 * log(u1)) * sin(2.0 * M_PI * u2);
+
+    // scaling
+        delta_T = sigma_T * z1;
+        delta_D = sigma_D * z2;
+
+    // truncate at ±3σ
+        if (delta_T > 3*sigma_T) delta_T = 3*sigma_T;
+        if (delta_T < -3*sigma_T) delta_T = -3*sigma_T;
+
+        if (delta_D > 3*sigma_D) delta_D = 3*sigma_D;
+        if (delta_D < -3*sigma_D) delta_D = -3*sigma_D;
+
+        temp[i] = 5e09 * (1.0 + delta_T);
+        dens[i] = 1e08 * (1.0 + delta_D);
+    }
+
+    printf("Initial conditions (Gaussian) copied.\n");
+    
+*/
     /**********************************
      *
      * *******************************/
