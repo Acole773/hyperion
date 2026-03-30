@@ -1,0 +1,69 @@
+Running on host frontier04993
+Current working directory: /ccs/proj/ast218/AC/hyperion/results/frontier/hip/20260305_115015
+Job started at: Thu Mar  5 11:50:15 AM EST 2026
+>>> ENTERED MAIN <<<
+MAIN: before gpu_backend_init
+INIT: rate_library_create(/ccs/proj/ast218/AC/hyperion/data/ratelibrary-alpha.txt)
+INIT: network_create(/ccs/proj/ast218/AC/hyperion/data/network-alpha.txt)
+CWD = /autofs/nccs-svm1_proj/ast218/AC/hyperion/results/frontier/hip/20260305_115015
+Trying to open file = /ccs/proj/ast218/AC/hyperion/data/ratelibrary-alpha.txt
+GPU_BACKEND_INIT (HIP) entered
+hipGetDeviceCount returned 1 devices, err=0
+Selected device 0
+DEVICE_INIT entered (zones=8)
+HYPERION_BURNER entered
+KERNEL WRAPPER entered
+HYPERION_BURNER entered
+KERNEL WRAPPER entered
+Initializing Hyperion...
+Hyperion initialized.
+Starting GPU backend init...
+Selected HIP device 0
+[bn_burner_gpu] device_init called with zones=8
+[bn_burner_gpu] device_init completed successfully.
+GPU backend init done.
+Starting run_batch...
+Allocating host arrays...
+Host arrays allocated.
+Copying initial conditions into xin...
+Initial conditions copied.
+Launching GPU burner kernel (warmup)...
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+[bn_burner_gpu] Kernel execution completed.
+Result:
+   0 1.46294e-05
+   1 2.10458e-04
+   2 3.20379e-02
+   3 1.32046e-03
+   4 1.32397e-02
+   5 4.55965e-03
+   6 3.98130e-04
+   7 6.54573e-06
+   8 4.32145e-09
+   9 2.41235e-11
+  10 2.67176e-16
+  11 3.37329e-22
+  12 1.57665e-28
+  13 5.63615e-34
+  14 1.88070e-40
+  15 5.33251e-47
+
+Sdotrate for the batch.
+sdot[0]: 1.00534e+16
+sdot[1]: 7.26610e+16
+sdot[2]: -8.34873e+16
+sdot[3]: -1.54457e+16
+sdot[4]: 5.90913e+15
+sdot[5]: 5.93609e+16
+sdot[6]: 9.74609e+15
+sdot[7]: 1.65060e+16
+Total cycles per run of batch (avg, rnded): 6736860572 
+run_batch done.
+Finalizing GPU backend...
+[bn_burner_gpu] All device pointers freed.
+GPU backend finalize done.
+Job finished at: Thu Mar  5 11:51:11 AM EST 2026

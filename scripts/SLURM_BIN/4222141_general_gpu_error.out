@@ -1,0 +1,19 @@
+Running on host frontier08566
+Current working directory: /ccs/proj/ast218/AC/hyperion/results/frontier/hip/20260319_184414
+Job started at: Thu Mar 19 06:44:14 PM EDT 2026
+>>> ENTERED MAIN <<<
+MAIN: before gpu_backend_init
+INIT: rate_library_create(/ccs/proj/ast218/AC/hyperion/data/ratelibrary-150.txt)
+INIT: network_create(/ccs/proj/ast218/AC/hyperion/data/network-150.txt)
+CWD = /autofs/nccs-svm1_proj/ast218/AC/hyperion/results/frontier/hip/20260319_184414
+Trying to open file = /ccs/proj/ast218/AC/hyperion/data/ratelibrary-150.txt
+GPU_BACKEND_INIT (HIP) entered
+hipGetDeviceCount returned 1 devices, err=0
+Selected device 0
+DEVICE_INIT entered (zones=8)
+HYPERION_BURNER entered
+KERNEL WRAPPER entered
+:0:rocdevice.cpp            :2986: 3198349041330 us: [pid:3737342 tid:0x7ffea3dff6c0] Callback: Queue 0x7ffeb6e00000 aborting with error : HSA_STATUS_ERROR_EXCEPTION: An HSAIL operation resulted in a hardware exception. code: 0x1016
+srun: error: frontier08566: task 0: Aborted (core dumped)
+srun: Terminating StepId=4222141.0
+Job finished at: Thu Mar 19 06:47:34 PM EDT 2026

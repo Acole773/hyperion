@@ -1,0 +1,37 @@
+Running on host frontier06646
+Current working directory: /ccs/proj/ast218/AC/hyperion/results/frontier/hip/20260325_121001
+Job started at: Wed Mar 25 12:10:01 PM EDT 2026
+Breakpoint 1: file /ccs/proj/ast218/AC/hyperion/src/hipcore/bn_burner_gpu.c, line 129.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+>>> ENTERED MAIN <<<
+MAIN: before gpu_backend_init
+INIT: rate_library_create(/ccs/proj/ast218/AC/hyperion/data/ratelibrary-150.txt)
+INIT: network_create(/ccs/proj/ast218/AC/hyperion/data/network-150.txt)
+CWD = /autofs/nccs-svm1_proj/ast218/AC/hyperion/results/frontier/hip/20260325_121001
+Trying to open file = /ccs/proj/ast218/AC/hyperion/data/ratelibrary-150.txt
+GPU_BACKEND_INIT (HIP) entered
+[New Thread 0x7fffdc7ff6c0 (LWP 1100561)]
+[New Thread 0x7ffeca1ff6c0 (LWP 1100562)]
+[Thread 0x7ffeca1ff6c0 (LWP 1100562) exited]
+hipGetDeviceCount returned 1 devices, err=0
+Selected device 0
+DEVICE_INIT entered (zones=8)
+[New Thread 0x7ffea3dff6c0 (LWP 1100563)]
+HYPERION_BURNER entered
+
+Thread 1 "hyperion_test" hit Breakpoint 1, hyperion_burner_kernel (tstep=, temp=, dens=, xin=, xout=, sdotrate=, zones=8) at /ccs/proj/ast218/AC/hyperion/src/hipcore/bn_burner_gpu.c:129
+129	    fprintf(stderr, "KERNEL WRAPPER entered\n");
+
+--- Reached Host Wrapper ---
+All functions matching regular expression "hyperion_burner":
+
+File /ccs/proj/ast218/AC/hyperion/src/hipcore/bn_burner_gpu.c:
+50:	void hyperion_burner_(double*, double*, double*, double*, double*, double*, uchar*, int*);
+126:	static void hyperion_burner_kernel(double*, double*, double*, double*, double*, double*, int);
+
+Non-debugging symbols:
+0x0000000000244b80  __device_stub__hyperion_burner_dev_kernel
+No source file named hyperion_burner_dev_kernel.
+Breakpoint 2 (hyperion_burner_dev_kernel:151) pending.
+Job finished at: Wed Mar 25 12:10:03 PM EDT 2026

@@ -1,0 +1,4821 @@
+Running on host frontier07550
+Current working directory: /ccs/proj/ast218/AC/hyperion/results/frontier/hip/20260306_115714
+Job started at: Fri Mar  6 11:57:14 AM EST 2026
+>>> ENTERED MAIN <<<
+MAIN: before gpu_backend_init
+INIT: rate_library_create(/ccs/proj/ast218/AC/hyperion/data/ratelibrary-150.txt)
+INIT: network_create(/ccs/proj/ast218/AC/hyperion/data/network-150.txt)
+CWD = /autofs/nccs-svm1_proj/ast218/AC/hyperion/results/frontier/hip/20260306_115714
+Trying to open file = /ccs/proj/ast218/AC/hyperion/data/ratelibrary-150.txt
+GPU_BACKEND_INIT (HIP) entered
+hipGetDeviceCount returned 1 devices, err=0
+Selected device 0
+DEVICE_INIT entered (zones=8)
+HYPERION_BURNER entered
+KERNEL WRAPPER entered
+Initializing Hyperion...
+Hyperion initialized.
+Starting GPU backend init...
+Selected HIP device 0
+[bn_burner_gpu] device_init called with zones=8
+[bn_burner_gpu] device_init completed successfully.
+GPU backend init done.
+Starting run_batch...
+Allocating host arrays...
+Host arrays allocated.
+Copying initial conditions into xin...
+Initial conditions copied.
+Launching GPU burner kernel (warmup)...
+[bn_burner_gpu] hyperion_burner_kernel: zones=8
+[bn_burner_gpu] Launching kernel...
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+  zone=7 thread=192 block=7
+  zone=7 thread=193 block=7
+  zone=7 thread=194 block=7
+  zone=7 thread=195 block=7
+  zone=7 thread=196 block=7
+  zone=7 thread=197 block=7
+  zone=7 thread=198 block=7
+  zone=7 thread=199 block=7
+  zone=7 thread=200 block=7
+  zone=7 thread=201 block=7
+  zone=7 thread=202 block=7
+  zone=7 thread=203 block=7
+  zone=7 thread=204 block=7
+  zone=7 thread=205 block=7
+  zone=7 thread=206 block=7
+  zone=7 thread=207 block=7
+  zone=7 thread=208 block=7
+  zone=7 thread=209 block=7
+  zone=7 thread=210 block=7
+  zone=7 thread=211 block=7
+  zone=7 thread=212 block=7
+  zone=7 thread=213 block=7
+  zone=7 thread=214 block=7
+  zone=7 thread=215 block=7
+  zone=7 thread=216 block=7
+  zone=7 thread=217 block=7
+  zone=7 thread=218 block=7
+  zone=7 thread=219 block=7
+  zone=7 thread=220 block=7
+  zone=7 thread=221 block=7
+  zone=7 thread=222 block=7
+  zone=7 thread=223 block=7
+  zone=7 thread=224 block=7
+  zone=7 thread=225 block=7
+  zone=7 thread=226 block=7
+  zone=7 thread=227 block=7
+  zone=7 thread=228 block=7
+  zone=7 thread=229 block=7
+  zone=7 thread=230 block=7
+  zone=7 thread=231 block=7
+  zone=7 thread=232 block=7
+  zone=7 thread=233 block=7
+  zone=7 thread=234 block=7
+  zone=7 thread=235 block=7
+  zone=7 thread=236 block=7
+  zone=7 thread=237 block=7
+  zone=7 thread=238 block=7
+  zone=7 thread=239 block=7
+  zone=7 thread=240 block=7
+  zone=7 thread=241 block=7
+  zone=7 thread=242 block=7
+  zone=7 thread=243 block=7
+  zone=7 thread=244 block=7
+  zone=7 thread=245 block=7
+  zone=7 thread=246 block=7
+  zone=7 thread=247 block=7
+  zone=7 thread=248 block=7
+  zone=7 thread=249 block=7
+  zone=7 thread=250 block=7
+  zone=7 thread=251 block=7
+  zone=7 thread=252 block=7
+  zone=7 thread=253 block=7
+  zone=7 thread=254 block=7
+  zone=7 thread=255 block=7
+  zone=7 thread=128 block=7
+  zone=7 thread=129 block=7
+  zone=7 thread=130 block=7
+  zone=7 thread=131 block=7
+  zone=7 thread=132 block=7
+  zone=7 thread=133 block=7
+  zone=7 thread=134 block=7
+  zone=7 thread=135 block=7
+  zone=7 thread=136 block=7
+  zone=7 thread=137 block=7
+  zone=7 thread=138 block=7
+  zone=7 thread=139 block=7
+  zone=7 thread=140 block=7
+  zone=7 thread=141 block=7
+  zone=7 thread=142 block=7
+  zone=7 thread=143 block=7
+  zone=7 thread=144 block=7
+  zone=7 thread=145 block=7
+  zone=7 thread=146 block=7
+  zone=7 thread=147 block=7
+  zone=7 thread=148 block=7
+  zone=7 thread=149 block=7
+  zone=7 thread=150 block=7
+  zone=7 thread=151 block=7
+  zone=7 thread=152 block=7
+  zone=7 thread=153 block=7
+  zone=7 thread=154 block=7
+  zone=7 thread=155 block=7
+  zone=7 thread=156 block=7
+  zone=7 thread=157 block=7
+  zone=7 thread=158 block=7
+  zone=7 thread=159 block=7
+  zone=7 thread=160 block=7
+  zone=7 thread=161 block=7
+  zone=7 thread=162 block=7
+  zone=7 thread=163 block=7
+  zone=7 thread=164 block=7
+  zone=7 thread=165 block=7
+  zone=7 thread=166 block=7
+  zone=7 thread=167 block=7
+  zone=7 thread=168 block=7
+  zone=7 thread=169 block=7
+  zone=7 thread=170 block=7
+  zone=7 thread=171 block=7
+  zone=7 thread=172 block=7
+  zone=7 thread=173 block=7
+  zone=7 thread=174 block=7
+  zone=7 thread=175 block=7
+  zone=7 thread=176 block=7
+  zone=7 thread=177 block=7
+  zone=7 thread=178 block=7
+  zone=7 thread=179 block=7
+  zone=7 thread=180 block=7
+  zone=7 thread=181 block=7
+  zone=7 thread=182 block=7
+  zone=7 thread=183 block=7
+  zone=7 thread=184 block=7
+  zone=7 thread=185 block=7
+  zone=7 thread=186 block=7
+  zone=7 thread=187 block=7
+  zone=7 thread=188 block=7
+  zone=7 thread=189 block=7
+  zone=7 thread=190 block=7
+  zone=7 thread=191 block=7
+  zone=7 thread=0 block=7
+  zone=7 thread=1 block=7
+  zone=7 thread=4 block=7
+  zone=7 thread=28 block=7
+  zone=7 thread=35 block=7
+  zone=7 thread=41 block=7
+  zone=7 thread=42 block=7
+  zone=7 thread=49 block=7
+  zone=7 thread=64 block=7
+  zone=7 thread=65 block=7
+  zone=7 thread=66 block=7
+  zone=7 thread=67 block=7
+  zone=7 thread=68 block=7
+  zone=7 thread=69 block=7
+  zone=7 thread=70 block=7
+  zone=7 thread=71 block=7
+  zone=7 thread=72 block=7
+  zone=7 thread=73 block=7
+  zone=7 thread=74 block=7
+  zone=7 thread=75 block=7
+  zone=7 thread=76 block=7
+  zone=7 thread=77 block=7
+  zone=7 thread=78 block=7
+  zone=7 thread=79 block=7
+  zone=7 thread=80 block=7
+  zone=7 thread=81 block=7
+  zone=7 thread=82 block=7
+  zone=7 thread=83 block=7
+  zone=7 thread=84 block=7
+  zone=7 thread=85 block=7
+  zone=7 thread=86 block=7
+  zone=7 thread=87 block=7
+  zone=7 thread=88 block=7
+  zone=7 thread=89 block=7
+  zone=7 thread=90 block=7
+  zone=7 thread=91 block=7
+  zone=7 thread=92 block=7
+  zone=7 thread=93 block=7
+  zone=7 thread=94 block=7
+  zone=7 thread=95 block=7
+  zone=7 thread=96 block=7
+  zone=7 thread=97 block=7
+  zone=7 thread=98 block=7
+  zone=7 thread=99 block=7
+  zone=7 thread=100 block=7
+  zone=7 thread=101 block=7
+  zone=7 thread=102 block=7
+  zone=7 thread=103 block=7
+  zone=7 thread=104 block=7
+  zone=7 thread=105 block=7
+  zone=7 thread=106 block=7
+  zone=7 thread=107 block=7
+  zone=7 thread=108 block=7
+  zone=7 thread=109 block=7
+  zone=7 thread=110 block=7
+  zone=7 thread=111 block=7
+  zone=7 thread=112 block=7
+  zone=7 thread=113 block=7
+  zone=7 thread=114 block=7
+  zone=7 thread=115 block=7
+  zone=7 thread=116 block=7
+  zone=7 thread=117 block=7
+  zone=7 thread=118 block=7
+  zone=7 thread=119 block=7
+  zone=7 thread=120 block=7
+  zone=7 thread=121 block=7
+  zone=7 thread=122 block=7
+  zone=7 thread=123 block=7
+  zone=7 thread=124 block=7
+  zone=7 thread=125 block=7
+  zone=7 thread=126 block=7
+  zone=7 thread=127 block=7
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+  zone=6 thread=64 block=6
+  zone=6 thread=65 block=6
+  zone=6 thread=66 block=6
+  zone=6 thread=67 block=6
+  zone=6 thread=68 block=6
+  zone=6 thread=69 block=6
+  zone=6 thread=70 block=6
+  zone=6 thread=71 block=6
+  zone=6 thread=72 block=6
+  zone=6 thread=73 block=6
+  zone=6 thread=74 block=6
+  zone=6 thread=75 block=6
+  zone=6 thread=76 block=6
+  zone=6 thread=77 block=6
+  zone=6 thread=78 block=6
+  zone=6 thread=79 block=6
+  zone=6 thread=80 block=6
+  zone=6 thread=81 block=6
+  zone=6 thread=82 block=6
+  zone=6 thread=83 block=6
+  zone=6 thread=84 block=6
+  zone=6 thread=85 block=6
+  zone=6 thread=86 block=6
+  zone=6 thread=87 block=6
+  zone=6 thread=88 block=6
+  zone=6 thread=89 block=6
+  zone=6 thread=90 block=6
+  zone=6 thread=91 block=6
+  zone=6 thread=92 block=6
+  zone=6 thread=93 block=6
+  zone=6 thread=94 block=6
+  zone=6 thread=95 block=6
+  zone=6 thread=96 block=6
+  zone=6 thread=97 block=6
+  zone=6 thread=98 block=6
+  zone=6 thread=99 block=6
+  zone=6 thread=100 block=6
+  zone=6 thread=101 block=6
+  zone=6 thread=102 block=6
+  zone=6 thread=103 block=6
+  zone=6 thread=104 block=6
+  zone=6 thread=105 block=6
+  zone=6 thread=106 block=6
+  zone=6 thread=107 block=6
+  zone=6 thread=108 block=6
+  zone=6 thread=109 block=6
+  zone=6 thread=110 block=6
+  zone=6 thread=111 block=6
+  zone=6 thread=112 block=6
+  zone=6 thread=113 block=6
+  zone=6 thread=114 block=6
+  zone=6 thread=115 block=6
+  zone=6 thread=116 block=6
+  zone=6 thread=117 block=6
+  zone=6 thread=118 block=6
+  zone=6 thread=119 block=6
+  zone=6 thread=120 block=6
+  zone=6 thread=121 block=6
+  zone=6 thread=122 block=6
+  zone=6 thread=123 block=6
+  zone=6 thread=124 block=6
+  zone=6 thread=125 block=6
+  zone=6 thread=126 block=6
+  zone=6 thread=127 block=6
+  zone=6 thread=192 block=6
+  zone=6 thread=193 block=6
+  zone=6 thread=194 block=6
+  zone=6 thread=195 block=6
+  zone=6 thread=196 block=6
+  zone=6 thread=197 block=6
+  zone=6 thread=198 block=6
+  zone=6 thread=199 block=6
+  zone=6 thread=200 block=6
+  zone=6 thread=201 block=6
+  zone=6 thread=202 block=6
+  zone=6 thread=203 block=6
+  zone=6 thread=204 block=6
+  zone=6 thread=205 block=6
+  zone=6 thread=206 block=6
+  zone=6 thread=207 block=6
+  zone=6 thread=208 block=6
+  zone=6 thread=209 block=6
+  zone=6 thread=210 block=6
+  zone=6 thread=211 block=6
+  zone=6 thread=212 block=6
+  zone=6 thread=213 block=6
+  zone=6 thread=214 block=6
+  zone=6 thread=215 block=6
+  zone=6 thread=216 block=6
+  zone=6 thread=217 block=6
+  zone=6 thread=218 block=6
+  zone=6 thread=219 block=6
+  zone=6 thread=220 block=6
+  zone=6 thread=221 block=6
+  zone=6 thread=222 block=6
+  zone=6 thread=223 block=6
+  zone=6 thread=224 block=6
+  zone=6 thread=225 block=6
+  zone=6 thread=226 block=6
+  zone=6 thread=227 block=6
+  zone=6 thread=228 block=6
+  zone=6 thread=229 block=6
+  zone=6 thread=230 block=6
+  zone=6 thread=231 block=6
+  zone=6 thread=232 block=6
+  zone=6 thread=233 block=6
+  zone=6 thread=234 block=6
+  zone=6 thread=235 block=6
+  zone=6 thread=236 block=6
+  zone=6 thread=237 block=6
+  zone=6 thread=238 block=6
+  zone=6 thread=239 block=6
+  zone=6 thread=240 block=6
+  zone=6 thread=241 block=6
+  zone=6 thread=242 block=6
+  zone=6 thread=243 block=6
+  zone=6 thread=244 block=6
+  zone=6 thread=245 block=6
+  zone=6 thread=246 block=6
+  zone=6 thread=247 block=6
+  zone=6 thread=248 block=6
+  zone=6 thread=249 block=6
+  zone=6 thread=250 block=6
+  zone=6 thread=251 block=6
+  zone=6 thread=252 block=6
+  zone=6 thread=253 block=6
+  zone=6 thread=254 block=6
+  zone=6 thread=255 block=6
+  zone=6 thread=0 block=6
+  zone=6 thread=1 block=6
+  zone=6 thread=4 block=6
+  zone=6 thread=28 block=6
+  zone=6 thread=35 block=6
+  zone=6 thread=41 block=6
+  zone=6 thread=42 block=6
+  zone=6 thread=49 block=6
+  zone=6 thread=128 block=6
+  zone=6 thread=129 block=6
+  zone=6 thread=130 block=6
+  zone=6 thread=131 block=6
+  zone=6 thread=132 block=6
+  zone=6 thread=133 block=6
+  zone=6 thread=134 block=6
+  zone=6 thread=135 block=6
+  zone=6 thread=136 block=6
+  zone=6 thread=137 block=6
+  zone=6 thread=138 block=6
+  zone=6 thread=139 block=6
+  zone=6 thread=140 block=6
+  zone=6 thread=141 block=6
+  zone=6 thread=142 block=6
+  zone=6 thread=143 block=6
+  zone=6 thread=144 block=6
+  zone=6 thread=145 block=6
+  zone=6 thread=146 block=6
+  zone=6 thread=147 block=6
+  zone=6 thread=148 block=6
+  zone=6 thread=149 block=6
+  zone=6 thread=150 block=6
+  zone=6 thread=151 block=6
+  zone=6 thread=152 block=6
+  zone=6 thread=153 block=6
+  zone=6 thread=154 block=6
+  zone=6 thread=155 block=6
+  zone=6 thread=156 block=6
+  zone=6 thread=157 block=6
+  zone=6 thread=158 block=6
+  zone=6 thread=159 block=6
+  zone=6 thread=160 block=6
+  zone=6 thread=161 block=6
+  zone=6 thread=162 block=6
+  zone=6 thread=163 block=6
+  zone=6 thread=164 block=6
+  zone=6 thread=165 block=6
+  zone=6 thread=166 block=6
+  zone=6 thread=167 block=6
+  zone=6 thread=168 block=6
+  zone=6 thread=169 block=6
+  zone=6 thread=170 block=6
+  zone=6 thread=171 block=6
+  zone=6 thread=172 block=6
+  zone=6 thread=173 block=6
+  zone=6 thread=174 block=6
+  zone=6 thread=175 block=6
+  zone=6 thread=176 block=6
+  zone=6 thread=177 block=6
+  zone=6 thread=178 block=6
+  zone=6 thread=179 block=6
+  zone=6 thread=180 block=6
+  zone=6 thread=181 block=6
+  zone=6 thread=182 block=6
+  zone=6 thread=183 block=6
+  zone=6 thread=184 block=6
+  zone=6 thread=185 block=6
+  zone=6 thread=186 block=6
+  zone=6 thread=187 block=6
+  zone=6 thread=188 block=6
+  zone=6 thread=189 block=6
+  zone=6 thread=190 block=6
+  zone=6 thread=191 block=6
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+  zone=4 thread=64 block=4
+  zone=4 thread=65 block=4
+  zone=4 thread=66 block=4
+  zone=4 thread=67 block=4
+  zone=4 thread=68 block=4
+  zone=4 thread=69 block=4
+  zone=4 thread=70 block=4
+  zone=4 thread=71 block=4
+  zone=4 thread=72 block=4
+  zone=4 thread=73 block=4
+  zone=4 thread=74 block=4
+  zone=4 thread=75 block=4
+  zone=4 thread=76 block=4
+  zone=4 thread=77 block=4
+  zone=4 thread=78 block=4
+  zone=4 thread=79 block=4
+  zone=4 thread=80 block=4
+  zone=4 thread=81 block=4
+  zone=4 thread=82 block=4
+  zone=4 thread=83 block=4
+  zone=4 thread=84 block=4
+  zone=4 thread=85 block=4
+  zone=4 thread=86 block=4
+  zone=4 thread=87 block=4
+  zone=4 thread=88 block=4
+  zone=4 thread=89 block=4
+  zone=4 thread=90 block=4
+  zone=4 thread=91 block=4
+  zone=4 thread=92 block=4
+  zone=4 thread=93 block=4
+  zone=4 thread=94 block=4
+  zone=4 thread=95 block=4
+  zone=4 thread=96 block=4
+  zone=4 thread=97 block=4
+  zone=4 thread=98 block=4
+  zone=4 thread=99 block=4
+  zone=4 thread=100 block=4
+  zone=4 thread=101 block=4
+  zone=4 thread=102 block=4
+  zone=4 thread=103 block=4
+  zone=4 thread=104 block=4
+  zone=4 thread=105 block=4
+  zone=4 thread=106 block=4
+  zone=4 thread=107 block=4
+  zone=4 thread=108 block=4
+  zone=4 thread=109 block=4
+  zone=4 thread=110 block=4
+  zone=4 thread=111 block=4
+  zone=4 thread=112 block=4
+  zone=4 thread=113 block=4
+  zone=4 thread=114 block=4
+  zone=4 thread=115 block=4
+  zone=4 thread=116 block=4
+  zone=4 thread=117 block=4
+  zone=4 thread=118 block=4
+  zone=4 thread=119 block=4
+  zone=4 thread=120 block=4
+  zone=4 thread=121 block=4
+  zone=4 thread=122 block=4
+  zone=4 thread=123 block=4
+  zone=4 thread=124 block=4
+  zone=4 thread=125 block=4
+  zone=4 thread=126 block=4
+  zone=4 thread=127 block=4
+  zone=4 thread=128 block=4
+  zone=4 thread=129 block=4
+  zone=4 thread=130 block=4
+  zone=4 thread=131 block=4
+  zone=4 thread=132 block=4
+  zone=4 thread=133 block=4
+  zone=4 thread=134 block=4
+  zone=4 thread=135 block=4
+  zone=4 thread=136 block=4
+  zone=4 thread=137 block=4
+  zone=4 thread=138 block=4
+  zone=4 thread=139 block=4
+  zone=4 thread=140 block=4
+  zone=4 thread=141 block=4
+  zone=4 thread=142 block=4
+  zone=4 thread=143 block=4
+  zone=4 thread=144 block=4
+  zone=4 thread=145 block=4
+  zone=4 thread=146 block=4
+  zone=4 thread=147 block=4
+  zone=4 thread=148 block=4
+  zone=4 thread=149 block=4
+  zone=4 thread=150 block=4
+  zone=4 thread=151 block=4
+  zone=4 thread=152 block=4
+  zone=4 thread=153 block=4
+  zone=4 thread=154 block=4
+  zone=4 thread=155 block=4
+  zone=4 thread=156 block=4
+  zone=4 thread=157 block=4
+  zone=4 thread=158 block=4
+  zone=4 thread=159 block=4
+  zone=4 thread=160 block=4
+  zone=4 thread=161 block=4
+  zone=4 thread=162 block=4
+  zone=4 thread=163 block=4
+  zone=4 thread=164 block=4
+  zone=4 thread=165 block=4
+  zone=4 thread=166 block=4
+  zone=4 thread=167 block=4
+  zone=4 thread=168 block=4
+  zone=4 thread=169 block=4
+  zone=4 thread=170 block=4
+  zone=4 thread=171 block=4
+  zone=4 thread=172 block=4
+  zone=4 thread=173 block=4
+  zone=4 thread=174 block=4
+  zone=4 thread=175 block=4
+  zone=4 thread=176 block=4
+  zone=4 thread=177 block=4
+  zone=4 thread=178 block=4
+  zone=4 thread=179 block=4
+  zone=4 thread=180 block=4
+  zone=4 thread=181 block=4
+  zone=4 thread=182 block=4
+  zone=4 thread=183 block=4
+  zone=4 thread=184 block=4
+  zone=4 thread=185 block=4
+  zone=4 thread=186 block=4
+  zone=4 thread=187 block=4
+  zone=4 thread=188 block=4
+  zone=4 thread=189 block=4
+  zone=4 thread=190 block=4
+  zone=4 thread=191 block=4
+  zone=4 thread=0 block=4
+  zone=4 thread=1 block=4
+  zone=4 thread=4 block=4
+  zone=4 thread=28 block=4
+  zone=4 thread=35 block=4
+  zone=4 thread=41 block=4
+  zone=4 thread=42 block=4
+  zone=4 thread=49 block=4
+  zone=4 thread=192 block=4
+  zone=4 thread=193 block=4
+  zone=4 thread=194 block=4
+  zone=4 thread=195 block=4
+  zone=4 thread=196 block=4
+  zone=4 thread=197 block=4
+  zone=4 thread=198 block=4
+  zone=4 thread=199 block=4
+  zone=4 thread=200 block=4
+  zone=4 thread=201 block=4
+  zone=4 thread=202 block=4
+  zone=4 thread=203 block=4
+  zone=4 thread=204 block=4
+  zone=4 thread=205 block=4
+  zone=4 thread=206 block=4
+  zone=4 thread=207 block=4
+  zone=4 thread=208 block=4
+  zone=4 thread=209 block=4
+  zone=4 thread=210 block=4
+  zone=4 thread=211 block=4
+  zone=4 thread=212 block=4
+  zone=4 thread=213 block=4
+  zone=4 thread=214 block=4
+  zone=4 thread=215 block=4
+  zone=4 thread=216 block=4
+  zone=4 thread=217 block=4
+  zone=4 thread=218 block=4
+  zone=4 thread=219 block=4
+  zone=4 thread=220 block=4
+  zone=4 thread=221 block=4
+  zone=4 thread=222 block=4
+  zone=4 thread=223 block=4
+  zone=4 thread=224 block=4
+  zone=4 thread=225 block=4
+  zone=4 thread=226 block=4
+  zone=4 thread=227 block=4
+  zone=4 thread=228 block=4
+  zone=4 thread=229 block=4
+  zone=4 thread=230 block=4
+  zone=4 thread=231 block=4
+  zone=4 thread=232 block=4
+  zone=4 thread=233 block=4
+  zone=4 thread=234 block=4
+  zone=4 thread=235 block=4
+  zone=4 thread=236 block=4
+  zone=4 thread=237 block=4
+  zone=4 thread=238 block=4
+  zone=4 thread=239 block=4
+  zone=4 thread=240 block=4
+  zone=4 thread=241 block=4
+  zone=4 thread=242 block=4
+  zone=4 thread=243 block=4
+  zone=4 thread=244 block=4
+  zone=4 thread=245 block=4
+  zone=4 thread=246 block=4
+  zone=4 thread=247 block=4
+  zone=4 thread=248 block=4
+  zone=4 thread=249 block=4
+  zone=4 thread=250 block=4
+  zone=4 thread=251 block=4
+  zone=4 thread=252 block=4
+  zone=4 thread=253 block=4
+  zone=4 thread=254 block=4
+  zone=4 thread=255 block=4
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+  zone=3 thread=0 block=3
+  zone=3 thread=1 block=3
+  zone=3 thread=4 block=3
+  zone=3 thread=28 block=3
+  zone=3 thread=35 block=3
+  zone=3 thread=41 block=3
+  zone=3 thread=42 block=3
+  zone=3 thread=49 block=3
+  zone=3 thread=64 block=3
+  zone=3 thread=65 block=3
+  zone=3 thread=66 block=3
+  zone=3 thread=67 block=3
+  zone=3 thread=68 block=3
+  zone=3 thread=69 block=3
+  zone=3 thread=70 block=3
+  zone=3 thread=71 block=3
+  zone=3 thread=72 block=3
+  zone=3 thread=73 block=3
+  zone=3 thread=74 block=3
+  zone=3 thread=75 block=3
+  zone=3 thread=76 block=3
+  zone=3 thread=77 block=3
+  zone=3 thread=78 block=3
+  zone=3 thread=79 block=3
+  zone=3 thread=80 block=3
+  zone=3 thread=81 block=3
+  zone=3 thread=82 block=3
+  zone=3 thread=83 block=3
+  zone=3 thread=84 block=3
+  zone=3 thread=85 block=3
+  zone=3 thread=86 block=3
+  zone=3 thread=87 block=3
+  zone=3 thread=88 block=3
+  zone=3 thread=89 block=3
+  zone=3 thread=90 block=3
+  zone=3 thread=91 block=3
+  zone=3 thread=92 block=3
+  zone=3 thread=93 block=3
+  zone=3 thread=94 block=3
+  zone=3 thread=95 block=3
+  zone=3 thread=96 block=3
+  zone=3 thread=97 block=3
+  zone=3 thread=98 block=3
+  zone=3 thread=99 block=3
+  zone=3 thread=100 block=3
+  zone=3 thread=101 block=3
+  zone=3 thread=102 block=3
+  zone=3 thread=103 block=3
+  zone=3 thread=104 block=3
+  zone=3 thread=105 block=3
+  zone=3 thread=106 block=3
+  zone=3 thread=107 block=3
+  zone=3 thread=108 block=3
+  zone=3 thread=109 block=3
+  zone=3 thread=110 block=3
+  zone=3 thread=111 block=3
+  zone=3 thread=112 block=3
+  zone=3 thread=113 block=3
+  zone=3 thread=114 block=3
+  zone=3 thread=115 block=3
+  zone=3 thread=116 block=3
+  zone=3 thread=117 block=3
+  zone=3 thread=118 block=3
+  zone=3 thread=119 block=3
+  zone=3 thread=120 block=3
+  zone=3 thread=121 block=3
+  zone=3 thread=122 block=3
+  zone=3 thread=123 block=3
+  zone=3 thread=124 block=3
+  zone=3 thread=125 block=3
+  zone=3 thread=126 block=3
+  zone=3 thread=127 block=3
+  zone=3 thread=128 block=3
+  zone=3 thread=129 block=3
+  zone=3 thread=130 block=3
+  zone=3 thread=131 block=3
+  zone=3 thread=132 block=3
+  zone=3 thread=133 block=3
+  zone=3 thread=134 block=3
+  zone=3 thread=135 block=3
+  zone=3 thread=136 block=3
+  zone=3 thread=137 block=3
+  zone=3 thread=138 block=3
+  zone=3 thread=139 block=3
+  zone=3 thread=140 block=3
+  zone=3 thread=141 block=3
+  zone=3 thread=142 block=3
+  zone=3 thread=143 block=3
+  zone=3 thread=144 block=3
+  zone=3 thread=145 block=3
+  zone=3 thread=146 block=3
+  zone=3 thread=147 block=3
+  zone=3 thread=148 block=3
+  zone=3 thread=149 block=3
+  zone=3 thread=150 block=3
+  zone=3 thread=151 block=3
+  zone=3 thread=152 block=3
+  zone=3 thread=153 block=3
+  zone=3 thread=154 block=3
+  zone=3 thread=155 block=3
+  zone=3 thread=156 block=3
+  zone=3 thread=157 block=3
+  zone=3 thread=158 block=3
+  zone=3 thread=159 block=3
+  zone=3 thread=160 block=3
+  zone=3 thread=161 block=3
+  zone=3 thread=162 block=3
+  zone=3 thread=163 block=3
+  zone=3 thread=164 block=3
+  zone=3 thread=165 block=3
+  zone=3 thread=166 block=3
+  zone=3 thread=167 block=3
+  zone=3 thread=168 block=3
+  zone=3 thread=169 block=3
+  zone=3 thread=170 block=3
+  zone=3 thread=171 block=3
+  zone=3 thread=172 block=3
+  zone=3 thread=173 block=3
+  zone=3 thread=174 block=3
+  zone=3 thread=175 block=3
+  zone=3 thread=176 block=3
+  zone=3 thread=177 block=3
+  zone=3 thread=178 block=3
+  zone=3 thread=179 block=3
+  zone=3 thread=180 block=3
+  zone=3 thread=181 block=3
+  zone=3 thread=182 block=3
+  zone=3 thread=183 block=3
+  zone=3 thread=184 block=3
+  zone=3 thread=185 block=3
+  zone=3 thread=186 block=3
+  zone=3 thread=187 block=3
+  zone=3 thread=188 block=3
+  zone=3 thread=189 block=3
+  zone=3 thread=190 block=3
+  zone=3 thread=191 block=3
+  zone=3 thread=192 block=3
+  zone=3 thread=193 block=3
+  zone=3 thread=194 block=3
+  zone=3 thread=195 block=3
+  zone=3 thread=196 block=3
+  zone=3 thread=197 block=3
+  zone=3 thread=198 block=3
+  zone=3 thread=199 block=3
+  zone=3 thread=200 block=3
+  zone=3 thread=201 block=3
+  zone=3 thread=202 block=3
+  zone=3 thread=203 block=3
+  zone=3 thread=204 block=3
+  zone=3 thread=205 block=3
+  zone=3 thread=206 block=3
+  zone=3 thread=207 block=3
+  zone=3 thread=208 block=3
+  zone=3 thread=209 block=3
+  zone=3 thread=210 block=3
+  zone=3 thread=211 block=3
+  zone=3 thread=212 block=3
+  zone=3 thread=213 block=3
+  zone=3 thread=214 block=3
+  zone=3 thread=215 block=3
+  zone=3 thread=216 block=3
+  zone=3 thread=217 block=3
+  zone=3 thread=218 block=3
+  zone=3 thread=219 block=3
+  zone=3 thread=220 block=3
+  zone=3 thread=221 block=3
+  zone=3 thread=222 block=3
+  zone=3 thread=223 block=3
+  zone=3 thread=224 block=3
+  zone=3 thread=225 block=3
+  zone=3 thread=226 block=3
+  zone=3 thread=227 block=3
+  zone=3 thread=228 block=3
+  zone=3 thread=229 block=3
+  zone=3 thread=230 block=3
+  zone=3 thread=231 block=3
+  zone=3 thread=232 block=3
+  zone=3 thread=233 block=3
+  zone=3 thread=234 block=3
+  zone=3 thread=235 block=3
+  zone=3 thread=236 block=3
+  zone=3 thread=237 block=3
+  zone=3 thread=238 block=3
+  zone=3 thread=239 block=3
+  zone=3 thread=240 block=3
+  zone=3 thread=241 block=3
+  zone=3 thread=242 block=3
+  zone=3 thread=243 block=3
+  zone=3 thread=244 block=3
+  zone=3 thread=245 block=3
+  zone=3 thread=246 block=3
+  zone=3 thread=247 block=3
+  zone=3 thread=248 block=3
+  zone=3 thread=249 block=3
+  zone=3 thread=250 block=3
+  zone=3 thread=251 block=3
+  zone=3 thread=252 block=3
+  zone=3 thread=253 block=3
+  zone=3 thread=254 block=3
+  zone=3 thread=255 block=3
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+  zone=0 thread=0 block=0
+  zone=0 thread=1 block=0
+  zone=0 thread=4 block=0
+  zone=0 thread=28 block=0
+  zone=0 thread=35 block=0
+  zone=0 thread=41 block=0
+  zone=0 thread=42 block=0
+  zone=0 thread=49 block=0
+  zone=0 thread=64 block=0
+  zone=0 thread=65 block=0
+  zone=0 thread=66 block=0
+  zone=0 thread=67 block=0
+  zone=0 thread=68 block=0
+  zone=0 thread=69 block=0
+  zone=0 thread=70 block=0
+  zone=0 thread=71 block=0
+  zone=0 thread=72 block=0
+  zone=0 thread=73 block=0
+  zone=0 thread=74 block=0
+  zone=0 thread=75 block=0
+  zone=0 thread=76 block=0
+  zone=0 thread=77 block=0
+  zone=0 thread=78 block=0
+  zone=0 thread=79 block=0
+  zone=0 thread=80 block=0
+  zone=0 thread=81 block=0
+  zone=0 thread=82 block=0
+  zone=0 thread=83 block=0
+  zone=0 thread=84 block=0
+  zone=0 thread=85 block=0
+  zone=0 thread=86 block=0
+  zone=0 thread=87 block=0
+  zone=0 thread=88 block=0
+  zone=0 thread=89 block=0
+  zone=0 thread=90 block=0
+  zone=0 thread=91 block=0
+  zone=0 thread=92 block=0
+  zone=0 thread=93 block=0
+  zone=0 thread=94 block=0
+  zone=0 thread=95 block=0
+  zone=0 thread=96 block=0
+  zone=0 thread=97 block=0
+  zone=0 thread=98 block=0
+  zone=0 thread=99 block=0
+  zone=0 thread=100 block=0
+  zone=0 thread=101 block=0
+  zone=0 thread=102 block=0
+  zone=0 thread=103 block=0
+  zone=0 thread=104 block=0
+  zone=0 thread=105 block=0
+  zone=0 thread=106 block=0
+  zone=0 thread=107 block=0
+  zone=0 thread=108 block=0
+  zone=0 thread=109 block=0
+  zone=0 thread=110 block=0
+  zone=0 thread=111 block=0
+  zone=0 thread=112 block=0
+  zone=0 thread=113 block=0
+  zone=0 thread=114 block=0
+  zone=0 thread=115 block=0
+  zone=0 thread=116 block=0
+  zone=0 thread=117 block=0
+  zone=0 thread=118 block=0
+  zone=0 thread=119 block=0
+  zone=0 thread=120 block=0
+  zone=0 thread=121 block=0
+  zone=0 thread=122 block=0
+  zone=0 thread=123 block=0
+  zone=0 thread=124 block=0
+  zone=0 thread=125 block=0
+  zone=0 thread=126 block=0
+  zone=0 thread=127 block=0
+  zone=0 thread=128 block=0
+  zone=0 thread=129 block=0
+  zone=0 thread=130 block=0
+  zone=0 thread=131 block=0
+  zone=0 thread=132 block=0
+  zone=0 thread=133 block=0
+  zone=0 thread=134 block=0
+  zone=0 thread=135 block=0
+  zone=0 thread=136 block=0
+  zone=0 thread=137 block=0
+  zone=0 thread=138 block=0
+  zone=0 thread=139 block=0
+  zone=0 thread=140 block=0
+  zone=0 thread=141 block=0
+  zone=0 thread=142 block=0
+  zone=0 thread=143 block=0
+  zone=0 thread=144 block=0
+  zone=0 thread=145 block=0
+  zone=0 thread=146 block=0
+  zone=0 thread=147 block=0
+  zone=0 thread=148 block=0
+  zone=0 thread=149 block=0
+  zone=0 thread=150 block=0
+  zone=0 thread=151 block=0
+  zone=0 thread=152 block=0
+  zone=0 thread=153 block=0
+  zone=0 thread=154 block=0
+  zone=0 thread=155 block=0
+  zone=0 thread=156 block=0
+  zone=0 thread=157 block=0
+  zone=0 thread=158 block=0
+  zone=0 thread=159 block=0
+  zone=0 thread=160 block=0
+  zone=0 thread=161 block=0
+  zone=0 thread=162 block=0
+  zone=0 thread=163 block=0
+  zone=0 thread=164 block=0
+  zone=0 thread=165 block=0
+  zone=0 thread=166 block=0
+  zone=0 thread=167 block=0
+  zone=0 thread=168 block=0
+  zone=0 thread=169 block=0
+  zone=0 thread=170 block=0
+  zone=0 thread=171 block=0
+  zone=0 thread=172 block=0
+  zone=0 thread=173 block=0
+  zone=0 thread=174 block=0
+  zone=0 thread=175 block=0
+  zone=0 thread=176 block=0
+  zone=0 thread=177 block=0
+  zone=0 thread=178 block=0
+  zone=0 thread=179 block=0
+  zone=0 thread=180 block=0
+  zone=0 thread=181 block=0
+  zone=0 thread=182 block=0
+  zone=0 thread=183 block=0
+  zone=0 thread=184 block=0
+  zone=0 thread=185 block=0
+  zone=0 thread=186 block=0
+  zone=0 thread=187 block=0
+  zone=0 thread=188 block=0
+  zone=0 thread=189 block=0
+  zone=0 thread=190 block=0
+  zone=0 thread=191 block=0
+  zone=0 thread=192 block=0
+  zone=0 thread=193 block=0
+  zone=0 thread=194 block=0
+  zone=0 thread=195 block=0
+  zone=0 thread=196 block=0
+  zone=0 thread=197 block=0
+  zone=0 thread=198 block=0
+  zone=0 thread=199 block=0
+  zone=0 thread=200 block=0
+  zone=0 thread=201 block=0
+  zone=0 thread=202 block=0
+  zone=0 thread=203 block=0
+  zone=0 thread=204 block=0
+  zone=0 thread=205 block=0
+  zone=0 thread=206 block=0
+  zone=0 thread=207 block=0
+  zone=0 thread=208 block=0
+  zone=0 thread=209 block=0
+  zone=0 thread=210 block=0
+  zone=0 thread=211 block=0
+  zone=0 thread=212 block=0
+  zone=0 thread=213 block=0
+  zone=0 thread=214 block=0
+  zone=0 thread=215 block=0
+  zone=0 thread=216 block=0
+  zone=0 thread=217 block=0
+  zone=0 thread=218 block=0
+  zone=0 thread=219 block=0
+  zone=0 thread=220 block=0
+  zone=0 thread=221 block=0
+  zone=0 thread=222 block=0
+  zone=0 thread=223 block=0
+  zone=0 thread=224 block=0
+  zone=0 thread=225 block=0
+  zone=0 thread=226 block=0
+  zone=0 thread=227 block=0
+  zone=0 thread=228 block=0
+  zone=0 thread=229 block=0
+  zone=0 thread=230 block=0
+  zone=0 thread=231 block=0
+  zone=0 thread=232 block=0
+  zone=0 thread=233 block=0
+  zone=0 thread=234 block=0
+  zone=0 thread=235 block=0
+  zone=0 thread=236 block=0
+  zone=0 thread=237 block=0
+  zone=0 thread=238 block=0
+  zone=0 thread=239 block=0
+  zone=0 thread=240 block=0
+  zone=0 thread=241 block=0
+  zone=0 thread=242 block=0
+  zone=0 thread=243 block=0
+  zone=0 thread=244 block=0
+  zone=0 thread=245 block=0
+  zone=0 thread=246 block=0
+  zone=0 thread=247 block=0
+  zone=0 thread=248 block=0
+  zone=0 thread=249 block=0
+  zone=0 thread=250 block=0
+  zone=0 thread=251 block=0
+  zone=0 thread=252 block=0
+  zone=0 thread=253 block=0
+  zone=0 thread=254 block=0
+  zone=0 thread=255 block=0
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+  zone=5 thread=192 block=5
+  zone=5 thread=193 block=5
+  zone=5 thread=194 block=5
+  zone=5 thread=195 block=5
+  zone=5 thread=196 block=5
+  zone=5 thread=197 block=5
+  zone=5 thread=198 block=5
+  zone=5 thread=199 block=5
+  zone=5 thread=200 block=5
+  zone=5 thread=201 block=5
+  zone=5 thread=202 block=5
+  zone=5 thread=203 block=5
+  zone=5 thread=204 block=5
+  zone=5 thread=205 block=5
+  zone=5 thread=206 block=5
+  zone=5 thread=207 block=5
+  zone=5 thread=208 block=5
+  zone=5 thread=209 block=5
+  zone=5 thread=210 block=5
+  zone=5 thread=211 block=5
+  zone=5 thread=212 block=5
+  zone=5 thread=213 block=5
+  zone=5 thread=214 block=5
+  zone=5 thread=215 block=5
+  zone=5 thread=216 block=5
+  zone=5 thread=217 block=5
+  zone=5 thread=218 block=5
+  zone=5 thread=219 block=5
+  zone=5 thread=220 block=5
+  zone=5 thread=221 block=5
+  zone=5 thread=222 block=5
+  zone=5 thread=223 block=5
+  zone=5 thread=224 block=5
+  zone=5 thread=225 block=5
+  zone=5 thread=226 block=5
+  zone=5 thread=227 block=5
+  zone=5 thread=228 block=5
+  zone=5 thread=229 block=5
+  zone=5 thread=230 block=5
+  zone=5 thread=231 block=5
+  zone=5 thread=232 block=5
+  zone=5 thread=233 block=5
+  zone=5 thread=234 block=5
+  zone=5 thread=235 block=5
+  zone=5 thread=236 block=5
+  zone=5 thread=237 block=5
+  zone=5 thread=238 block=5
+  zone=5 thread=239 block=5
+  zone=5 thread=240 block=5
+  zone=5 thread=241 block=5
+  zone=5 thread=242 block=5
+  zone=5 thread=243 block=5
+  zone=5 thread=244 block=5
+  zone=5 thread=245 block=5
+  zone=5 thread=246 block=5
+  zone=5 thread=247 block=5
+  zone=5 thread=248 block=5
+  zone=5 thread=249 block=5
+  zone=5 thread=250 block=5
+  zone=5 thread=251 block=5
+  zone=5 thread=252 block=5
+  zone=5 thread=253 block=5
+  zone=5 thread=254 block=5
+  zone=5 thread=255 block=5
+  zone=5 thread=0 block=5
+  zone=5 thread=1 block=5
+  zone=5 thread=4 block=5
+  zone=5 thread=28 block=5
+  zone=5 thread=35 block=5
+  zone=5 thread=41 block=5
+  zone=5 thread=42 block=5
+  zone=5 thread=49 block=5
+  zone=5 thread=128 block=5
+  zone=5 thread=129 block=5
+  zone=5 thread=130 block=5
+  zone=5 thread=131 block=5
+  zone=5 thread=132 block=5
+  zone=5 thread=133 block=5
+  zone=5 thread=134 block=5
+  zone=5 thread=135 block=5
+  zone=5 thread=136 block=5
+  zone=5 thread=137 block=5
+  zone=5 thread=138 block=5
+  zone=5 thread=139 block=5
+  zone=5 thread=140 block=5
+  zone=5 thread=141 block=5
+  zone=5 thread=142 block=5
+  zone=5 thread=143 block=5
+  zone=5 thread=144 block=5
+  zone=5 thread=145 block=5
+  zone=5 thread=146 block=5
+  zone=5 thread=147 block=5
+  zone=5 thread=148 block=5
+  zone=5 thread=149 block=5
+  zone=5 thread=150 block=5
+  zone=5 thread=151 block=5
+  zone=5 thread=152 block=5
+  zone=5 thread=153 block=5
+  zone=5 thread=154 block=5
+  zone=5 thread=155 block=5
+  zone=5 thread=156 block=5
+  zone=5 thread=157 block=5
+  zone=5 thread=158 block=5
+  zone=5 thread=159 block=5
+  zone=5 thread=160 block=5
+  zone=5 thread=161 block=5
+  zone=5 thread=162 block=5
+  zone=5 thread=163 block=5
+  zone=5 thread=164 block=5
+  zone=5 thread=165 block=5
+  zone=5 thread=166 block=5
+  zone=5 thread=167 block=5
+  zone=5 thread=168 block=5
+  zone=5 thread=169 block=5
+  zone=5 thread=170 block=5
+  zone=5 thread=171 block=5
+  zone=5 thread=172 block=5
+  zone=5 thread=173 block=5
+  zone=5 thread=174 block=5
+  zone=5 thread=175 block=5
+  zone=5 thread=176 block=5
+  zone=5 thread=177 block=5
+  zone=5 thread=178 block=5
+  zone=5 thread=179 block=5
+  zone=5 thread=180 block=5
+  zone=5 thread=181 block=5
+  zone=5 thread=182 block=5
+  zone=5 thread=183 block=5
+  zone=5 thread=184 block=5
+  zone=5 thread=185 block=5
+  zone=5 thread=186 block=5
+  zone=5 thread=187 block=5
+  zone=5 thread=188 block=5
+  zone=5 thread=189 block=5
+  zone=5 thread=190 block=5
+  zone=5 thread=191 block=5
+  zone=5 thread=64 block=5
+  zone=5 thread=65 block=5
+  zone=5 thread=66 block=5
+  zone=5 thread=67 block=5
+  zone=5 thread=68 block=5
+  zone=5 thread=69 block=5
+  zone=5 thread=70 block=5
+  zone=5 thread=71 block=5
+  zone=5 thread=72 block=5
+  zone=5 thread=73 block=5
+  zone=5 thread=74 block=5
+  zone=5 thread=75 block=5
+  zone=5 thread=76 block=5
+  zone=5 thread=77 block=5
+  zone=5 thread=78 block=5
+  zone=5 thread=79 block=5
+  zone=5 thread=80 block=5
+  zone=5 thread=81 block=5
+  zone=5 thread=82 block=5
+  zone=5 thread=83 block=5
+  zone=5 thread=84 block=5
+  zone=5 thread=85 block=5
+  zone=5 thread=86 block=5
+  zone=5 thread=87 block=5
+  zone=5 thread=88 block=5
+  zone=5 thread=89 block=5
+  zone=5 thread=90 block=5
+  zone=5 thread=91 block=5
+  zone=5 thread=92 block=5
+  zone=5 thread=93 block=5
+  zone=5 thread=94 block=5
+  zone=5 thread=95 block=5
+  zone=5 thread=96 block=5
+  zone=5 thread=97 block=5
+  zone=5 thread=98 block=5
+  zone=5 thread=99 block=5
+  zone=5 thread=100 block=5
+  zone=5 thread=101 block=5
+  zone=5 thread=102 block=5
+  zone=5 thread=103 block=5
+  zone=5 thread=104 block=5
+  zone=5 thread=105 block=5
+  zone=5 thread=106 block=5
+  zone=5 thread=107 block=5
+  zone=5 thread=108 block=5
+  zone=5 thread=109 block=5
+  zone=5 thread=110 block=5
+  zone=5 thread=111 block=5
+  zone=5 thread=112 block=5
+  zone=5 thread=113 block=5
+  zone=5 thread=114 block=5
+  zone=5 thread=115 block=5
+  zone=5 thread=116 block=5
+  zone=5 thread=117 block=5
+  zone=5 thread=118 block=5
+  zone=5 thread=119 block=5
+  zone=5 thread=120 block=5
+  zone=5 thread=121 block=5
+  zone=5 thread=122 block=5
+  zone=5 thread=123 block=5
+  zone=5 thread=124 block=5
+  zone=5 thread=125 block=5
+  zone=5 thread=126 block=5
+  zone=5 thread=127 block=5
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+  zone=1 thread=0 block=1
+  zone=1 thread=1 block=1
+  zone=1 thread=4 block=1
+  zone=1 thread=28 block=1
+  zone=1 thread=35 block=1
+  zone=1 thread=41 block=1
+  zone=1 thread=42 block=1
+  zone=1 thread=49 block=1
+  zone=1 thread=192 block=1
+  zone=1 thread=193 block=1
+  zone=1 thread=194 block=1
+  zone=1 thread=195 block=1
+  zone=1 thread=196 block=1
+  zone=1 thread=197 block=1
+  zone=1 thread=198 block=1
+  zone=1 thread=199 block=1
+  zone=1 thread=200 block=1
+  zone=1 thread=201 block=1
+  zone=1 thread=202 block=1
+  zone=1 thread=203 block=1
+  zone=1 thread=204 block=1
+  zone=1 thread=205 block=1
+  zone=1 thread=206 block=1
+  zone=1 thread=207 block=1
+  zone=1 thread=208 block=1
+  zone=1 thread=209 block=1
+  zone=1 thread=210 block=1
+  zone=1 thread=211 block=1
+  zone=1 thread=212 block=1
+  zone=1 thread=213 block=1
+  zone=1 thread=214 block=1
+  zone=1 thread=215 block=1
+  zone=1 thread=216 block=1
+  zone=1 thread=217 block=1
+  zone=1 thread=218 block=1
+  zone=1 thread=219 block=1
+  zone=1 thread=220 block=1
+  zone=1 thread=221 block=1
+  zone=1 thread=222 block=1
+  zone=1 thread=223 block=1
+  zone=1 thread=224 block=1
+  zone=1 thread=225 block=1
+  zone=1 thread=226 block=1
+  zone=1 thread=227 block=1
+  zone=1 thread=228 block=1
+  zone=1 thread=229 block=1
+  zone=1 thread=230 block=1
+  zone=1 thread=231 block=1
+  zone=1 thread=232 block=1
+  zone=1 thread=233 block=1
+  zone=1 thread=234 block=1
+  zone=1 thread=235 block=1
+  zone=1 thread=236 block=1
+  zone=1 thread=237 block=1
+  zone=1 thread=238 block=1
+  zone=1 thread=239 block=1
+  zone=1 thread=240 block=1
+  zone=1 thread=241 block=1
+  zone=1 thread=242 block=1
+  zone=1 thread=243 block=1
+  zone=1 thread=244 block=1
+  zone=1 thread=245 block=1
+  zone=1 thread=246 block=1
+  zone=1 thread=247 block=1
+  zone=1 thread=248 block=1
+  zone=1 thread=249 block=1
+  zone=1 thread=250 block=1
+  zone=1 thread=251 block=1
+  zone=1 thread=252 block=1
+  zone=1 thread=253 block=1
+  zone=1 thread=254 block=1
+  zone=1 thread=255 block=1
+  zone=1 thread=64 block=1
+  zone=1 thread=65 block=1
+  zone=1 thread=66 block=1
+  zone=1 thread=67 block=1
+  zone=1 thread=68 block=1
+  zone=1 thread=69 block=1
+  zone=1 thread=70 block=1
+  zone=1 thread=71 block=1
+  zone=1 thread=72 block=1
+  zone=1 thread=73 block=1
+  zone=1 thread=74 block=1
+  zone=1 thread=75 block=1
+  zone=1 thread=76 block=1
+  zone=1 thread=77 block=1
+  zone=1 thread=78 block=1
+  zone=1 thread=79 block=1
+  zone=1 thread=80 block=1
+  zone=1 thread=81 block=1
+  zone=1 thread=82 block=1
+  zone=1 thread=83 block=1
+  zone=1 thread=84 block=1
+  zone=1 thread=85 block=1
+  zone=1 thread=86 block=1
+  zone=1 thread=87 block=1
+  zone=1 thread=88 block=1
+  zone=1 thread=89 block=1
+  zone=1 thread=90 block=1
+  zone=1 thread=91 block=1
+  zone=1 thread=92 block=1
+  zone=1 thread=93 block=1
+  zone=1 thread=94 block=1
+  zone=1 thread=95 block=1
+  zone=1 thread=96 block=1
+  zone=1 thread=97 block=1
+  zone=1 thread=98 block=1
+  zone=1 thread=99 block=1
+  zone=1 thread=100 block=1
+  zone=1 thread=101 block=1
+  zone=1 thread=102 block=1
+  zone=1 thread=103 block=1
+  zone=1 thread=104 block=1
+  zone=1 thread=105 block=1
+  zone=1 thread=106 block=1
+  zone=1 thread=107 block=1
+  zone=1 thread=108 block=1
+  zone=1 thread=109 block=1
+  zone=1 thread=110 block=1
+  zone=1 thread=111 block=1
+  zone=1 thread=112 block=1
+  zone=1 thread=113 block=1
+  zone=1 thread=114 block=1
+  zone=1 thread=115 block=1
+  zone=1 thread=116 block=1
+  zone=1 thread=117 block=1
+  zone=1 thread=118 block=1
+  zone=1 thread=119 block=1
+  zone=1 thread=120 block=1
+  zone=1 thread=121 block=1
+  zone=1 thread=122 block=1
+  zone=1 thread=123 block=1
+  zone=1 thread=124 block=1
+  zone=1 thread=125 block=1
+  zone=1 thread=126 block=1
+  zone=1 thread=127 block=1
+  zone=1 thread=128 block=1
+  zone=1 thread=129 block=1
+  zone=1 thread=130 block=1
+  zone=1 thread=131 block=1
+  zone=1 thread=132 block=1
+  zone=1 thread=133 block=1
+  zone=1 thread=134 block=1
+  zone=1 thread=135 block=1
+  zone=1 thread=136 block=1
+  zone=1 thread=137 block=1
+  zone=1 thread=138 block=1
+  zone=1 thread=139 block=1
+  zone=1 thread=140 block=1
+  zone=1 thread=141 block=1
+  zone=1 thread=142 block=1
+  zone=1 thread=143 block=1
+  zone=1 thread=144 block=1
+  zone=1 thread=145 block=1
+  zone=1 thread=146 block=1
+  zone=1 thread=147 block=1
+  zone=1 thread=148 block=1
+  zone=1 thread=149 block=1
+  zone=1 thread=150 block=1
+  zone=1 thread=151 block=1
+  zone=1 thread=152 block=1
+  zone=1 thread=153 block=1
+  zone=1 thread=154 block=1
+  zone=1 thread=155 block=1
+  zone=1 thread=156 block=1
+  zone=1 thread=157 block=1
+  zone=1 thread=158 block=1
+  zone=1 thread=159 block=1
+  zone=1 thread=160 block=1
+  zone=1 thread=161 block=1
+  zone=1 thread=162 block=1
+  zone=1 thread=163 block=1
+  zone=1 thread=164 block=1
+  zone=1 thread=165 block=1
+  zone=1 thread=166 block=1
+  zone=1 thread=167 block=1
+  zone=1 thread=168 block=1
+  zone=1 thread=169 block=1
+  zone=1 thread=170 block=1
+  zone=1 thread=171 block=1
+  zone=1 thread=172 block=1
+  zone=1 thread=173 block=1
+  zone=1 thread=174 block=1
+  zone=1 thread=175 block=1
+  zone=1 thread=176 block=1
+  zone=1 thread=177 block=1
+  zone=1 thread=178 block=1
+  zone=1 thread=179 block=1
+  zone=1 thread=180 block=1
+  zone=1 thread=181 block=1
+  zone=1 thread=182 block=1
+  zone=1 thread=183 block=1
+  zone=1 thread=184 block=1
+  zone=1 thread=185 block=1
+  zone=1 thread=186 block=1
+  zone=1 thread=187 block=1
+  zone=1 thread=188 block=1
+  zone=1 thread=189 block=1
+  zone=1 thread=190 block=1
+  zone=1 thread=191 block=1
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: xout invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+GPU ERROR: flux invalid
+  zone=2 thread=128 block=2
+  zone=2 thread=129 block=2
+  zone=2 thread=130 block=2
+  zone=2 thread=131 block=2
+  zone=2 thread=132 block=2
+  zone=2 thread=133 block=2
+  zone=2 thread=134 block=2
+  zone=2 thread=135 block=2
+  zone=2 thread=136 block=2
+  zone=2 thread=137 block=2
+  zone=2 thread=138 block=2
+  zone=2 thread=139 block=2
+  zone=2 thread=140 block=2
+  zone=2 thread=141 block=2
+  zone=2 thread=142 block=2
+  zone=2 thread=143 block=2
+  zone=2 thread=144 block=2
+  zone=2 thread=145 block=2
+  zone=2 thread=146 block=2
+  zone=2 thread=147 block=2
+  zone=2 thread=148 block=2
+  zone=2 thread=149 block=2
+  zone=2 thread=150 block=2
+  zone=2 thread=151 block=2
+  zone=2 thread=152 block=2
+  zone=2 thread=153 block=2
+  zone=2 thread=154 block=2
+  zone=2 thread=155 block=2
+  zone=2 thread=156 block=2
+  zone=2 thread=157 block=2
+  zone=2 thread=158 block=2
+  zone=2 thread=159 block=2
+  zone=2 thread=160 block=2
+  zone=2 thread=161 block=2
+  zone=2 thread=162 block=2
+  zone=2 thread=163 block=2
+  zone=2 thread=164 block=2
+  zone=2 thread=165 block=2
+  zone=2 thread=166 block=2
+  zone=2 thread=167 block=2
+  zone=2 thread=168 block=2
+  zone=2 thread=169 block=2
+  zone=2 thread=170 block=2
+  zone=2 thread=171 block=2
+  zone=2 thread=172 block=2
+  zone=2 thread=173 block=2
+  zone=2 thread=174 block=2
+  zone=2 thread=175 block=2
+  zone=2 thread=176 block=2
+  zone=2 thread=177 block=2
+  zone=2 thread=178 block=2
+  zone=2 thread=179 block=2
+  zone=2 thread=180 block=2
+  zone=2 thread=181 block=2
+  zone=2 thread=182 block=2
+  zone=2 thread=183 block=2
+  zone=2 thread=184 block=2
+  zone=2 thread=185 block=2
+  zone=2 thread=186 block=2
+  zone=2 thread=187 block=2
+  zone=2 thread=188 block=2
+  zone=2 thread=189 block=2
+  zone=2 thread=190 block=2
+  zone=2 thread=191 block=2
+  zone=2 thread=0 block=2
+  zone=2 thread=1 block=2
+  zone=2 thread=4 block=2
+  zone=2 thread=28 block=2
+  zone=2 thread=35 block=2
+  zone=2 thread=41 block=2
+  zone=2 thread=42 block=2
+  zone=2 thread=49 block=2
+  zone=2 thread=192 block=2
+  zone=2 thread=193 block=2
+  zone=2 thread=194 block=2
+  zone=2 thread=195 block=2
+  zone=2 thread=196 block=2
+  zone=2 thread=197 block=2
+  zone=2 thread=198 block=2
+  zone=2 thread=199 block=2
+  zone=2 thread=200 block=2
+  zone=2 thread=201 block=2
+  zone=2 thread=202 block=2
+  zone=2 thread=203 block=2
+  zone=2 thread=204 block=2
+  zone=2 thread=205 block=2
+  zone=2 thread=206 block=2
+  zone=2 thread=207 block=2
+  zone=2 thread=208 block=2
+  zone=2 thread=209 block=2
+  zone=2 thread=210 block=2
+  zone=2 thread=211 block=2
+  zone=2 thread=212 block=2
+  zone=2 thread=213 block=2
+  zone=2 thread=214 block=2
+  zone=2 thread=215 block=2
+  zone=2 thread=216 block=2
+  zone=2 thread=217 block=2
+  zone=2 thread=218 block=2
+  zone=2 thread=219 block=2
+  zone=2 thread=220 block=2
+  zone=2 thread=221 block=2
+  zone=2 thread=222 block=2
+  zone=2 thread=223 block=2
+  zone=2 thread=224 block=2
+  zone=2 thread=225 block=2
+  zone=2 thread=226 block=2
+  zone=2 thread=227 block=2
+  zone=2 thread=228 block=2
+  zone=2 thread=229 block=2
+  zone=2 thread=230 block=2
+  zone=2 thread=231 block=2
+  zone=2 thread=232 block=2
+  zone=2 thread=233 block=2
+  zone=2 thread=234 block=2
+  zone=2 thread=235 block=2
+  zone=2 thread=236 block=2
+  zone=2 thread=237 block=2
+  zone=2 thread=238 block=2
+  zone=2 thread=239 block=2
+  zone=2 thread=240 block=2
+  zone=2 thread=241 block=2
+  zone=2 thread=242 block=2
+  zone=2 thread=243 block=2
+  zone=2 thread=244 block=2
+  zone=2 thread=245 block=2
+  zone=2 thread=246 block=2
+  zone=2 thread=247 block=2
+  zone=2 thread=248 block=2
+  zone=2 thread=249 block=2
+  zone=2 thread=250 block=2
+  zone=2 thread=251 block=2
+  zone=2 thread=252 block=2
+  zone=2 thread=253 block=2
+  zone=2 thread=254 block=2
+  zone=2 thread=255 block=2
+  zone=2 thread=64 block=2
+  zone=2 thread=65 block=2
+  zone=2 thread=66 block=2
+  zone=2 thread=67 block=2
+  zone=2 thread=68 block=2
+  zone=2 thread=69 block=2
+  zone=2 thread=70 block=2
+  zone=2 thread=71 block=2
+  zone=2 thread=72 block=2
+  zone=2 thread=73 block=2
+  zone=2 thread=74 block=2
+  zone=2 thread=75 block=2
+  zone=2 thread=76 block=2
+  zone=2 thread=77 block=2
+  zone=2 thread=78 block=2
+  zone=2 thread=79 block=2
+  zone=2 thread=80 block=2
+  zone=2 thread=81 block=2
+  zone=2 thread=82 block=2
+  zone=2 thread=83 block=2
+  zone=2 thread=84 block=2
+  zone=2 thread=85 block=2
+  zone=2 thread=86 block=2
+  zone=2 thread=87 block=2
+  zone=2 thread=88 block=2
+  zone=2 thread=89 block=2
+  zone=2 thread=90 block=2
+  zone=2 thread=91 block=2
+  zone=2 thread=92 block=2
+  zone=2 thread=93 block=2
+  zone=2 thread=94 block=2
+  zone=2 thread=95 block=2
+  zone=2 thread=96 block=2
+  zone=2 thread=97 block=2
+  zone=2 thread=98 block=2
+  zone=2 thread=99 block=2
+  zone=2 thread=100 block=2
+  zone=2 thread=101 block=2
+  zone=2 thread=102 block=2
+  zone=2 thread=103 block=2
+  zone=2 thread=104 block=2
+  zone=2 thread=105 block=2
+  zone=2 thread=106 block=2
+  zone=2 thread=107 block=2
+  zone=2 thread=108 block=2
+  zone=2 thread=109 block=2
+  zone=2 thread=110 block=2
+  zone=2 thread=111 block=2
+  zone=2 thread=112 block=2
+  zone=2 thread=113 block=2
+  zone=2 thread=114 block=2
+  zone=2 thread=115 block=2
+  zone=2 thread=116 block=2
+  zone=2 thread=117 block=2
+  zone=2 thread=118 block=2
+  zone=2 thread=119 block=2
+  zone=2 thread=120 block=2
+  zone=2 thread=121 block=2
+  zone=2 thread=122 block=2
+  zone=2 thread=123 block=2
+  zone=2 thread=124 block=2
+  zone=2 thread=125 block=2
+  zone=2 thread=126 block=2
+  zone=2 thread=127 block=2
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=-nan
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+  value=inf
+:0:rocdevice.cpp            :2986: 283908378130 us: [pid:381201 tid:0x7ffeabdff6c0] Callback: Queue 0x7ffeb6e00000 aborting with error : HSA_STATUS_ERROR_EXCEPTION: An HSAIL operation resulted in a hardware exception. code: 0x1016
+  srun: error: frontier07550: task 0: Aborted (core dumped)
+srun: Terminating StepId=4182055.0
+Job finished at: Fri Mar  6 11:58:05 AM EST 2026
