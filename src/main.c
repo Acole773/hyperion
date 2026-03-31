@@ -2,7 +2,6 @@
 #include "core/init.h"
 #include "core/kill.h"
 #include "core/store.h"
-#include "gpu/hip.h"
 
 #include <math.h>
 #include <stdint.h>
