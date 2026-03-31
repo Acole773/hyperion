@@ -6,9 +6,9 @@
 #include <hip/hip_runtime.h>
 
 // So that my LSP stops bugging me.
-#ifndef SIZE
-#define SIZE 16
-#endif
+// #ifndef SIZE
+// #define SIZE 16
+// #endif
 
 #if SIZE == 16
 #define SIZE 16
@@ -40,10 +40,32 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
                       double* restrict xout, double* sdotrate,
                       uchar* burned_zone, int* size) {
 
-    for (int i = 0; i < *size; i++) {
-        hyperion_burner_kernel(tstep, &temp[i], &dens[i], xin + (SIZE * i),
-        xout + (SIZE * i), &sdotrate[i], *size);
-    }
+    // hipMemcpy(args[BURNED_ZONE], 8);
+
+    // TODO: A memory limit needs to be set here, the GPU can only hold so much info... after that it needs to be broken into chunks.
+
+    hipMemcpy(args[TEMP], temp, *size * sizeof(double), hipMemcpyHostToDevice);
+    hipMemcpy(args[DENS], dens, *size * sizeof(double), hipMemcpyHostToDevice);
+    hipMemcpy(args[XIN], xin, *size * num_species * sizeof(double),
+              hipMemcpyHostToDevice);
+    hipMemcpy(args[XOUT], xout, *size * num_species * sizeof(double),
+              hipMemcpyHostToDevice);
+    hipMemcpy(args[SDOTRATE], sdotrate, *size * sizeof(double),
+              hipMemcpyHostToDevice);
+
+    // "1" is how many vals there are (lazy bastard)
+    hipMemcpy(args[REAL_VALS], tstep, *size * 1 * sizeof(double),
+              hipMemcpyHostToDevice);
+    // hipMemcpy(args[INT_VALS], NULL, *size * 1 * sizeof(int),
+    //           hipMemcpyHostToDevice);
+
+    // Passing NULL because they are not actually used...
+    hyperion_burner_kernel(NULL, NULL, NULL, NULL, NULL, NULL, *size);
+
+    hipMemcpy(xout, args[XOUT], *size * num_species * sizeof(double),
+              hipMemcpyDeviceToHost);
+    hipMemcpy(sdotrate, args[SDOTRATE], *size * sizeof(double),
+              hipMemcpyDeviceToHost);
 }
 
 int device_init(int zones) {
@@ -155,29 +177,13 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
                                    int zones) {
     int error;
 
-    // hipMemcpy(args[BURNED_ZONE], 8);
-    hipMemcpy(args[TEMP], temp, zones * sizeof(double), hipMemcpyHostToDevice);
-    hipMemcpy(args[DENS], dens, zones * sizeof(double), hipMemcpyHostToDevice);
-    hipMemcpy(args[XIN], xin, zones * num_species * sizeof(double),
-              hipMemcpyHostToDevice);
-    hipMemcpy(args[XOUT], xout, zones * num_species * sizeof(double),
-              hipMemcpyHostToDevice);
-    hipMemcpy(args[SDOTRATE], sdotrate, zones * sizeof(double),
-              hipMemcpyHostToDevice);
-
-    // "1" is how many vals there are
-    hipMemcpy(args[REAL_VALS], tstep, zones * 1 * sizeof(double),
-              hipMemcpyHostToDevice);
-    // hipMemcpy(args[INT_VALS], NULL, zones * 1 * sizeof(int),
-    //           hipMemcpyHostToDevice);
-
-    struct dim3 blockdim = {256, 1, 1}; // Number of threads
-    struct dim3 griddim = {1, 1, 1};    // Number of blocks
+    struct dim3 blockdim = {256, 1, 1};  // Number of threads
+    struct dim3 griddim = {zones, 1, 1}; // Number of blocks
     // TODO: this is finding the total memory used by `__shared__` memory in the
     // kernel, but that is less than obvious and should be made more clear.
-    int sharedmem_allocation =
-        sizeof(double) * (num_reactions + num_reactions + f_plus_total +
-                          f_minus_total + num_species + num_species);
+    // int sharedmem_allocation = sizeof(double) * (num_reactions + num_reactions +
+    //                                              num_species + num_species);
+    int sharedmem_allocation = 0;
     if ((error = hipConfigureCall(griddim, blockdim, sharedmem_allocation,
                                   hipStreamDefault)) != hipSuccess) {
         return;
@@ -190,15 +196,15 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
         trueargs[i] = &args[i];
     }
 
+    // TODO: why doesn't this matter for execution, only calling... wtf?
+    // sharedmem_allocation = 0;
+
+    // printf("%i\n", sharedmem_allocation);
+
     error = hipLaunchKernel(hyperion_burner_dev_kernel, griddim, blockdim,
                             trueargs, sharedmem_allocation, hipStreamDefault);
 
     printf("%i: %s\n", error, hipGetErrorString(error));
-
-    hipMemcpy(xout, args[XOUT], zones * num_species * sizeof(double),
-              hipMemcpyDeviceToHost);
-    hipMemcpy(sdotrate, args[SDOTRATE], zones * sizeof(double),
-              hipMemcpyDeviceToHost);
 
     return;
 }

@@ -13,7 +13,7 @@
 
 #include <x86intrin.h>
 
-#define BATCHCNT 8 // Number of zones to compute
+#define BATCHCNT 512 // Number of zones to compute
 
 int run_batch(void);
 
@@ -57,7 +57,7 @@ int run_batch(void) {
 
     for (int i = 0; i < BATCHCNT; i++) {
         memcpy(xin + (size * i), x, size * sizeof(double));
-        temp[i] = 5e09;
+        temp[i] = 5e09 + 1e6 * i;
         dens[i] = 1e08;
     }
 
@@ -68,8 +68,8 @@ int run_batch(void) {
     device_init(zones);
 
     // WARMUP
-    hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
-                     &zones);
+    // hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
+                     // &zones);
 
     unsigned long long cycles = __rdtsc();
 
@@ -88,6 +88,7 @@ int run_batch(void) {
     printf("Sdotrate for the batch.\n");
     for (int i = 0; i < BATCHCNT; i++) {
         printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
+        // printf("xout[%i]: %.5e\n", 0, xout[0 + i * size]);
     }
 
     printf("Total cycles per run of batch (avg, rnded): %lld \n",

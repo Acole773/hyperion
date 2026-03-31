@@ -26,7 +26,7 @@
 // #define WARMUP 0
 // #define AFRN 1
 
-#define BATCHCNT 32 // Number of zones to compute
+#define BATCHCNT 512 // Number of zones to compute
 
 int run_batch(void);
 
@@ -70,8 +70,8 @@ int run_batch(void) {
     int zones = BATCHCNT;
 
     // WARMUP
-    hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
-                     &zones);
+    // hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
+    //                  &zones);
 
     unsigned long long cycles = __rdtsc();
 
@@ -91,20 +91,20 @@ int run_batch(void) {
     // Add size just to check that it's working (serial cannot do this..)
     // Yes, this is all a little funky, but it works fine if you know what's
     // going on.
-    // for (int i = 0; i < size; i++) {
-    //     printf("%2i %.5e\n", i, xout[i]);
-    // }
+    for (int i = 0; i < size; i++) {
+        printf("%4i %.5e\n", i, xout[i]);
+    }
 #else
-    // for (int i = 0; i < size; i++) {
-    //     printf("%4i %.5e\n", i, xout[i]);
-    // }
+    for (int i = 0; i < size; i++) {
+        printf("%4i %.5e\n", i, xout[i]);
+    }
 #endif
     printf("\n");
 
-    // printf("Sdotrate for the batch.\n");
-    // for (int i = 0; i < BATCHCNT; i++) {
-    //     printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
-    // }
+    printf("Sdotrate for the batch.\n");
+    for (int i = 0; i < BATCHCNT; i++) {
+        printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
+    }
 
     printf("Total cycles per run of batch (avg, rnded): %lld \n",
            (cycles_ - cycles) / BATCHCNT);
