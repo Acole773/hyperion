@@ -1,6 +1,16 @@
 #ifndef __STORE_H
 #define __STORE_H
 
+#include <limits.h>
+
+#ifndef PATH_MAX
+#include <unistd.h>
+#endif
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 #include "restrict.h"
 
 extern int num_reactions;

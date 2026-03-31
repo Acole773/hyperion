@@ -11,6 +11,9 @@ set(SITE "default" CACHE STRING "Build configuration site")
 # ------------------------------------------------------------
 # Site configuration
 # ------------------------------------------------------------
+if(NOT SITE)
+    set(SITE "frontier") #change default choice here
+endif()
 message(STATUS "Using site configuration: ${SITE}")
 include(${CMAKE_SOURCE_DIR}/cmake/site/site_${SITE}.cmake OPTIONAL)
 

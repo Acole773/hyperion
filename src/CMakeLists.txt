@@ -47,6 +47,7 @@ else()
         PRIVATE
             hyperion_core
             hyperion_parse
+	    ${HYPERION_EXTRA_LIBS}
 	    m
     )
 

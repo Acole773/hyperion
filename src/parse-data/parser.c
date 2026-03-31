@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <unistd.h>
+#include <limits.h>
+
 #define LABELSIZE 35
 
 void rate_library_create(char* filename, int size) {
@@ -60,8 +63,6 @@ void rate_library_create(char* filename, int size) {
 
     int n = -1;
     int subindex = -1;
-    #include <unistd.h>
-    #include <limits.h>
 
     char cwd[PATH_MAX];
     getcwd(cwd, sizeof(cwd));
