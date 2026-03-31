@@ -1,21 +1,17 @@
-# c
-CC := gcc
-GCCOPTS := -O3 -fno-math-errno -ffinite-math-only -frounding-math
-CFLAGS := -std=c99 -Wall -Wextra --pedantic $(GCCOPTS)
+# ------------------------------------------------------------
+# Local CPU/GPU build defaults (CMake-friendly)
+# ------------------------------------------------------------
 
-# SIMD
-CFLAGS_SIMD := -mavx512f -march=native -D__HYPERION_USE_SIMD
+# CPU compiler
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall -Wextra -std=c99")
 
-# linker ld 
-LD := gcc # Use the gcc toolchain
-LD_LIBS := -lm -L$(OBJECT_DIR) -l:libhyburn.a 
-LD_FLAGS := 
+# Optional SIMD
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx512f -march=native -D__HYPERION_USE_SIMD")
 
-# python
-PYTHON := python3
+# Linker flags (library libhyburn.a must be in OBJECT_DIR)
+# target_link_libraries(hyperion PRIVATE ${OBJECT_DIR}/libhyburn.a m)
 
-# hip rocm
-HIPCC := hipcc
-HIPLD := hipcc
-CFLAGS_GPU := 
-LD_FLAGS_GPU :=
+# GPU compiler (HIP)
+# set(CMAKE_C_COMPILER hipcc)  # only enable if building GPU target
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ...")

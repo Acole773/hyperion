@@ -11,11 +11,15 @@ set(SITE "default" CACHE STRING "Build configuration site")
 # ------------------------------------------------------------
 # Site configuration
 # ------------------------------------------------------------
-if(NOT SITE)
-    set(SITE "frontier") #change default choice here
+if(NOT ENABLE_GPU)
+    if(NOT SITE)
+        set(SITE "frontier") #change default choice here
+    endif()
+    message(STATUS "Using site configuration: ${SITE}")
+    include(${CMAKE_SOURCE_DIR}/cmake/site/site_${SITE}.cmake OPTIONAL)
+else()
+    message(STATUS "GPU build: skipping site file (HIP compiler handles everything)")
 endif()
-message(STATUS "Using site configuration: ${SITE}")
-include(${CMAKE_SOURCE_DIR}/cmake/site/site_${SITE}.cmake OPTIONAL)
 
 # ------------------------------------------------------------
 # GPU enable
@@ -45,6 +49,9 @@ endif()
 # Debug flags
 # ------------------------------------------------------------
 if(ENABLE_GPU)
+
+    enable_language(HIP)
+    message(STATUS "HIP enabled, CMake will use hipcc for .hip and .cpp files")
 	
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 

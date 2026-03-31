@@ -1,18 +1,37 @@
-# Use Cray compiler wrappers for correct MPI and math linkage
-CC := cc
-LD := cc
-PYTHON := python3
-GCCOPTS := -O3 -fno-math-errno -ffinite-math-only -frounding-math
-CFLAGS := -std=c99 -Wall -Wextra --pedantic $(GCCOPTS)
-# NOTE: this must not be := defined, as it has to reeval CFLAGS for SIZE def
-CFLAGS_SIMD = $(CFLAGS) -mavx512f \
-							 -march=native -D__HYPERION_USE_SIND
+# site_frontier.cmake — robust GPU/CPU setup for Frontier
 
-# === HDF5 (Cray MPI build) ===
-HDF5_DIR := /sw/frontier/spack-envs/cpe24.11-cpu/opt/cce-18.0.1/hdf5-1.14.5-fbhfdr23kwzgknnufevewoslxgxfbvo7
-HDF5_INC := -I$(HDF5_DIR)/include
-HDF5_LIB := -L$(HDF5_DIR)/lib
+# -----------------------------
+# Default CPU compiler (only for CPU builds)
+# -----------------------------
+if(NOT DEFINED ENABLE_GPU OR NOT ENABLE_GPU)
+    set(CMAKE_C_COMPILER "cc")
+    set(CMAKE_CXX_COMPILER "CC")
+endif()
 
-# Link against HDF5 and standard math/dependency libs
-LD_LIBS := $(HDF5_LIB) -lhdf5 -lz -ldl -lm -lc -L$(OBJECT_DIR) -l:libhyburn.a
-LD_FLAGS := $(HDF5_INC)
+# -----------------------------
+# HDF5 (common)
+# -----------------------------
+set(HDF5_DIR "/sw/frontier/spack-envs/cpe24.11-cpu/opt/cce-18.0.1/hdf5-1.14.5-fbhfdr23kwzgknnufevewoslxgxfbvo7")
+include_directories(${HDF5_DIR}/include)
+link_directories(${HDF5_DIR}/lib)
+
+# -----------------------------
+# GPU / HIP
+# -----------------------------
+if(DEFINED ENABLE_GPU AND ENABLE_GPU)
+    # Require ROCm module to be loaded externally
+    find_program(HIPCC hipcc)
+    if(NOT HIPCC)
+        message(FATAL_ERROR "hipcc not found! Make sure you loaded ROCm module.")
+    endif()
+
+    # Add HIP includes if needed
+    include_directories(
+        ${CMAKE_SOURCE_DIR}/src/hipcore
+        ${CMAKE_SOURCE_DIR}/src/core
+        $ENV{ROCM_PATH}/hip/include
+    )
+    link_directories($ENV{ROCM_PATH}/hip/lib)
+
+    message(STATUS "GPU build: using hipcc from environment ($HIPCC)")
+endif()
