@@ -93,4 +93,3 @@ add_compile_definitions(SIZE=${SIZE})
 # Add main source directory
 add_subdirectory(src)
 #add_subdirectory(tests)
-

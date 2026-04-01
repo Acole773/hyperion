@@ -4,11 +4,12 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=1
 #!/bin/bash
-#SBATCH -A ast218                     # Project allocation
+#SBATCH -A stf006                     # Project allocation
 #SBATCH -J hyperion_parallel_150      # Job name
 #SBATCH -o %x-%j.out                  # Output file
-#SBATCH -t 00:30:00                   # Walltime
+#SBATCH -t 00:10:00                   # Walltime
 #SBATCH -p batch                      # Batch queue
+#SBATCH -q debug
 #SBATCH -N 1                          # One node
 #SBATCH -n 1                          # One MPI task
 #SBATCH -c 1                          # One CPU core
@@ -30,7 +31,7 @@ module load hdf5/1.14.5-mpi            # HDF5 if needed
 # =========================
 # Run directory
 # =========================
-BASE=/ccs/proj/ast218/AC/hyperion
+BASE=/lustre/orion/world-shared/stf006/jaharris/frontier_hackathon_2026/hyperion
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 RESULTS_DIR=$BASE/results/frontier/hip/$RUN_ID
 
@@ -55,8 +56,7 @@ echo "Job started at: $(date)"
 # Run
 # =========================
 cp $BASE/build-frontier-hip/src/hyperion .
-export HYPERION_DATA_DIR=/ccs/proj/ast218/AC/hyperion
+export HYPERION_DATA_DIR=$BASE
 srun ./hyperion
 
 echo "Job finished at: $(date)"
-

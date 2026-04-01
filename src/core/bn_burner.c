@@ -64,7 +64,7 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
 static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
                                    double* xin, double* restrict xout,
                                    double* sdotrate) {
-
+    double final_flux_energy = 0;
 
     // We use the  XOUT memory, but our computation is with abundance (y)
     // Yes, this is confusing.
@@ -76,8 +76,6 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     __DIAG_HALT("xin->xout", "xout", xout, SIZE);
 
     double tmp = *temp / 1e9;
-    double ddt_e = 0;
-
     double t93 = pow(tmp, THIRD);
     double t1 = 1 / tmp;
     double t2 = 1 / t93;
@@ -89,7 +87,14 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     double density[3] = {1.0, *dens, (*dens) * (*dens)};
 
     for (int i = 0; i < num_reactions; i++) {
-        double prefactor_ = prefactor[i] * density[num_react_species[i] - 1];
+        int ns = num_react_species[i] - 1;
+        if (ns < 0) {
+            ns = 0;
+        } else if (ns > 2) {
+            ns = 2;
+        }
+
+        double prefactor_ = prefactor[i] * density[ns];
         rate[i] =
             prefactor_ * exp(p_0[i] + t1 * p_1[i] + t2 * p_2[i] + t3 * p_3[i] +
                              t4 * p_4[i] + t5 * p_5[i] + t6 * p_6[i]);
@@ -99,107 +104,99 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
 
     double t = 1e-20;
     double dt = t * 1e-2;
+    double t_end = *tstep;
 
-    while (t < *tstep) {
+    while (1) {
+        if (t >= t_end || !isfinite(t) || dt <= 0.0) {
+            break;
+        }
 
         __DIAG_HALT("Timestep", "dt", &dt, 1);
 
         for (int i = 0; i < num_reactions; i++) {
-            switch (num_react_species[i]) {
-            case 1:
-                flux[i] = rate[i] * xout[reactant_1[i]];
-                break;
-            case 2:
-                flux[i] = rate[i] * xout[reactant_1[i]] * xout[reactant_2[i]];
-                break;
-            case 3:
-                flux[i] = rate[i] * xout[reactant_1[i]] * xout[reactant_2[i]] *
-                          xout[reactant_3[i]];
-                break;
+            double f_rate = rate[i];
+            double f = f_rate;
+
+            if (num_react_species[i] > 0) {
+                f *= xout[reactant_1[i]];
             }
+            if (num_react_species[i] > 1) {
+                f *= xout[reactant_2[i]];
+            }
+            if (num_react_species[i] > 2) {
+                f *= xout[reactant_3[i]];
+            }
+
+            flux[i] = f;
         }
         __DIAG_HALT("fluxes", "flux", flux, num_reactions);
 
-        for (int i = 0; i < f_plus_total; i++) {
-            f_plus[i] = f_plus_factor[i] * flux[f_plus_map[i]];
-        }
-        __DIAG_HALT("F+", "f_plus", f_plus, f_plus_total);
-
-        for (int i = 0; i < f_minus_total; i++) {
-            f_minus[i] = f_minus_factor[i] * flux[f_minus_map[i]];
-        }
-        __DIAG_HALT("F+", "f_minus", f_minus, f_minus_total);
-
         for (int i = 0; i < num_species; i++) {
-            // TODO: these dont change. We should determine them BEFORE
-            // integration. ESPECIALY since it's the biggest time-cost. If
-            // we do that, it may be possible to build a very optimized
-            // routine for it.
-            int min_plus = 0;
-            int min_minus = 0;
-            if (i > 0) {
-                min_plus = f_plus_max[i - 1] + 1;
-                min_minus = f_minus_max[i - 1] + 1;
-            }
-            f_plus_sum[i] = 0.0;
+            int min_plus = (i == 0) ? 0 : f_plus_max[i - 1] + 1;
+            int min_minus = (i == 0) ? 0 : f_minus_max[i - 1] + 1;
+            double plus = 0.0;
+            double minus = 0.0;
+
             for (int j = min_plus; j <= f_plus_max[i]; j++) {
-                f_plus_sum[i] += f_plus[j];
+                plus += f_plus_factor[j] * flux[f_plus_map[j]];
             }
-            f_minus_sum[i] = 0.0;
             for (int j = min_minus; j <= f_minus_max[i]; j++) {
-                f_minus_sum[i] += f_minus[j];
+                minus += f_minus_factor[j] * flux[f_minus_map[j]];
             }
-        }
-        __DIAG_HALT("F+ sum", "f_plus_sum", f_plus_sum, num_species);
-        __DIAG_HALT("F- sum", "f_minus_sum", f_minus_sum, num_species);
 
-        for (int i = 0; i < num_species; i++) {
-            if (f_minus_sum[i] * dt > xout[i]) {
+            f_plus_sum[i] = plus;
+            f_minus_sum[i] = minus;
+
+            if (minus * dt > xout[i]) {
                 // Asympotic estimate.
                 xout[i] =
-                    (xout[i] + f_plus_sum[i] * dt) /
-                    (1.0 + ((f_minus_sum[i] / (xout[i] + ZERO_FIX)) * dt));
+                    (xout[i] + plus * dt) /
+                    (1.0 + ((minus / (xout[i] + ZERO_FIX)) * dt));
 
                 // NOTE: FMA is slower here (I suspect due to the blocking
                 // of the accumulator)
             } else {
                 // Forward Euler update.
-                xout[i] += (f_plus_sum[i] - f_minus_sum[i]) * dt;
+                xout[i] += (plus - minus) * dt;
             }
         }
+        __DIAG_HALT("F+ sum", "f_plus_sum", f_plus_sum, num_species);
+        __DIAG_HALT("F- sum", "f_minus_sum", f_minus_sum, num_species);
         __DIAG_HALT("Y step", "xout", xout, SIZE);
 
-        // TODO: this continuous renormalization seems necessary, but it's
-        // really not great for performance...
-        double normalfac = 0;
         for (int i = 0; i < num_species; i++) {
-            xout[i] = xout[i] * aa[i];
-            normalfac += xout[i];
+            if (xout[i] < ZERO_FIX) {
+                xout[i] = ZERO_FIX;
+            }
         }
 
-        normalfac = 1 / normalfac;
-        __DIAG_HALT("Normalization", "normalfac", &normalfac, 1);
-        for (int i = 0; i < num_species; i++) {
-            xout[i] = xout[i] * normalfac;
-            xout[i] = xout[i] / aa[i];
-        }
-
-        tmp = 0;
+        final_flux_energy = 0;
         for (int i = 0; i < num_reactions; i++) {
-            tmp += flux[i] * q_value[i];
+            final_flux_energy += flux[i] * q_value[i];
         }
-        tmp *= dt;
-        ddt_e += tmp * 9.5768e17; // Convert MeV/nucleon/s to erg/g/s
 
         t += dt;
         dt = 1e-4 * t;
+        if (t + dt > *tstep) {
+            dt = fmax(*tstep - t, 1e-30);
+        }
     }
 
+    double normalfac = 0;
     for (int i = 0; i < SIZE; i++) {
-        xout[i] = xout[i] * aa[i];
+        normalfac += xout[i] * aa[i];
     }
 
-    *sdotrate = ddt_e;
+    // Match the current GPU kernel's end-only renormalization, but return mass
+    // fractions here because CPU callers and tests expect xout in X-space.
+    double norm_sum = 1 / normalfac;
+    __DIAG_HALT("Normalization", "normalfac", &norm_sum, 1);
+    for (int i = 0; i < SIZE; i++) {
+        xout[i] = xout[i] * aa[i] * norm_sum;
+    }
+
+    // Match the current GPU kernel's final-flux energy calculation.
+    *sdotrate = final_flux_energy * (*tstep) * 9.5768e17;
 
     return;
 }

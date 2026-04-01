@@ -25,6 +25,8 @@ libhyburn_base: builddir
 	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/parser.o
 	$(CC) -c $(SOURCE_DIR)/core/kill.c -o $(OBJECT_DIR)/kill.o $(CFLAGS) -fPIC
 	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/kill.o
+	$(CC) -c $(SOURCE_DIR)/core/paths.c -o $(OBJECT_DIR)/paths.o $(CFLAGS) -fPIC
+	ar rvs $(OBJECT_DIR)/libhyburn.a $(OBJECT_DIR)/paths.o
 
 libhyburn_serial: libhyburn_base
 	$(CC) -c $(SOURCE_DIR)/core/bn_burner.c -o $(OBJECT_DIR)/bn_burner.o \

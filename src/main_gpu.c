@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     if (!hyperion_data_dir) {
         fprintf(stderr,
             "ERROR: HYPERION_DATA_DIR not set\n"
-            "Please export HYPERION_DATA_DIR=/path/to/hyperion/data\n");
+            "Please export HYPERION_DATA_DIR=/path/to/hyperion\n");
         return EXIT_FAILURE;
     }
 

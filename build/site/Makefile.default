@@ -8,7 +8,7 @@ CFLAGS_SIMD := -mavx512f -march=native -D__HYPERION_USE_SIMD
 
 # linker ld 
 LD := gcc # Use the gcc toolchain
-LD_LIBS := -lm -L$(OBJECT_DIR) -l:libhyburn.a 
+LD_LIBS := -lm $(OBJECT_DIR)/libhyburn.a
 LD_FLAGS := 
 
 # python

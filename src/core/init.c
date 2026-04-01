@@ -1,6 +1,7 @@
 #include "paths.h"
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "init.h"
 #include "store.h"
 #include "../parse-data/parser.h"
@@ -34,6 +35,14 @@
 void hyperion_init_() {
     char rate_path[PATH_MAX];
     char network_path[PATH_MAX];
+
+    if (!hyperion_data_dir) {
+        fprintf(stderr,
+                "ERROR: hyperion_data_dir is not configured.\n"
+                "Set HYPERION_DATA_DIR before running or build with CMake so the\n"
+                "default repo root is embedded.\n");
+        exit(EXIT_FAILURE);
+    }
 
     snprintf(rate_path, sizeof(rate_path),
              "%s/%s", hyperion_data_dir, RATE_FILE);

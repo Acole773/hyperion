@@ -1,6 +1,7 @@
 #include "core/bn_burner.h"
 #include "core/init.h"
 #include "core/kill.h"
+#include "core/paths.h"
 #include "core/store.h"
 
 #include <math.h>
@@ -10,7 +11,9 @@
 #include <string.h>
 #include <time.h>
 
+#if defined(__x86_64__) || defined(__i386__)
 #include <x86intrin.h>
+#endif
 
 // The choice for how long to warm up is complicated. It just needs to max the
 // thread's clock out. There's a lot that goes into this... but this is fine.
@@ -25,11 +28,18 @@
 // #define WARMUP 0
 // #define AFRN 1
 
-#define BATCHCNT 32 // Number of zones to compute
+#define BATCHCNT 8 // Match the current GPU driver setup
 
 int run_batch(void);
+static unsigned long long hyperion_tick_count(void);
+static int configure_data_dir(void);
+static void setup_like_gpu_problem(double* xin, double* temp, double* dens,
+                                   int size);
 
 int main() {
+    if (configure_data_dir() == EXIT_FAILURE) {
+        return EXIT_FAILURE;
+    }
 
     if (run_batch() == EXIT_FAILURE) {
         return EXIT_FAILURE;
@@ -43,8 +53,6 @@ int run_batch(void) {
 
     double tstep = 1e-06;
     uchar* burned_zone;
-    int* zone;
-    int* kstep;
 
     // Overallocate for non-batched, but it's fine since we'll just ignore it if
     // that's the case.
@@ -57,23 +65,26 @@ int run_batch(void) {
 
     double* temp = malloc(BATCHCNT * sizeof(double));
     double* dens = malloc(BATCHCNT * sizeof(double));
+    memset(sdotrate, 0, BATCHCNT * sizeof(double));
 
+    printf("Initializing Hyperion...\n");
     hyperion_init_();
+    printf("Hyperion initialized.\n");
 
-    for (int i = 0; i < BATCHCNT; i++) {
-        memcpy(xin + (size * i), x, size * sizeof(double));
-        temp[i] = 5e09;
-        dens[i] = 1e08;
-    }
+    printf("Allocating and initializing CPU problem...\n");
+    setup_like_gpu_problem(xin, temp, dens, size);
+    printf("CPU problem initialized.\n");
 
     int zones = BATCHCNT;
     burned_zone = malloc(zones * sizeof(uchar));
+    memset(burned_zone, 0, zones * sizeof(uchar));
 
     // WARMUP
+    printf("Launching CPU burner (warmup)...\n");
     hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &zones);
 
-    unsigned long long cycles = __rdtsc();
+    unsigned long long cycles = hyperion_tick_count();
 
 #ifdef __HYPERION_USE_SIMD
     hyperion_burner_(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
@@ -83,32 +94,25 @@ int run_batch(void) {
                      &zones);
 #endif
 
-    unsigned long long cycles_ = __rdtsc();
+    unsigned long long cycles_ = hyperion_tick_count();
 
+    // Print abundance Y here so the standalone CPU log matches the current
+    // GPU driver's Result block without changing the CPU burner's X-space API.
     printf("Result:\n");
-
-#ifdef __HYPERION_USE_SIMD
-    // Add size just to check that it's working (serial cannot do this..)
-    // Yes, this is all a little funky, but it works fine if you know what's
-    // going on.
-    // for (int i = 0; i < size; i++) {
-    //     printf("%2i %.5e\n", i, xout[i]);
-    // }
-#else
-    // for (int i = 0; i < size; i++) {
-    //     printf("%4i %.5e\n", i, xout[i]);
-    // }
-#endif
+    for (int i = 0; i < size; i++) {
+        printf("%4i %.5e\n", i, xout[i] / aa[i]);
+    }
     printf("\n");
 
-    // printf("Sdotrate for the batch.\n");
-    // for (int i = 0; i < BATCHCNT; i++) {
-    //     printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
-    // }
+    printf("Sdotrate for the batch.\n");
+    for (int i = 0; i < BATCHCNT; i++) {
+        printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
+    }
 
     printf("Total cycles per run of batch (avg, rnded): %lld \n",
            (cycles_ - cycles) / BATCHCNT);
 
+    free(burned_zone);
     free(_scope_xin);
     free(_scope_xout);
     free(_scope_sdotrate);
@@ -116,4 +120,55 @@ int run_batch(void) {
     _killall_ptrs();
 
     return EXIT_SUCCESS;
+}
+
+static int configure_data_dir(void) {
+    const char* env_data_dir = getenv("HYPERION_DATA_DIR");
+
+    if (env_data_dir && env_data_dir[0] != '\0') {
+        hyperion_data_dir = env_data_dir;
+    }
+
+    if (!hyperion_data_dir) {
+        fprintf(stderr,
+                "ERROR: HYPERION_DATA_DIR not set\n"
+                "Set HYPERION_DATA_DIR=/path/to/hyperion or use a CMake build "
+                "that embeds a default data path.\n");
+        return EXIT_FAILURE;
+    }
+
+    fprintf(stderr, "Using HYPERION_DATA_DIR=%s\n", hyperion_data_dir);
+    return EXIT_SUCCESS;
+}
+
+static unsigned long long hyperion_tick_count(void) {
+#if defined(__x86_64__) || defined(__i386__)
+    return __rdtsc();
+#else
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ((unsigned long long)ts.tv_sec * 1000000000ull) +
+           (unsigned long long)ts.tv_nsec;
+#endif
+}
+
+static void setup_like_gpu_problem(double* xin, double* temp, double* dens,
+                                   int size) {
+    for (int i = 0; i < BATCHCNT; i++) {
+        double* current_xin = xin + (size * i);
+
+        memset(current_xin, 0, size * sizeof(double));
+
+        // Mirror the current GPU driver setup so CPU and GPU runs start from
+        // the same hard-coded problem definition.
+        if (size > 20) {
+            current_xin[12] = 0.04166;
+            current_xin[20] = 0.03125;
+        } else {
+            memcpy(current_xin, x, size * sizeof(double));
+        }
+
+        temp[i] = 5e09;
+        dens[i] = 1e08;
+    }
 }
