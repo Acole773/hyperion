@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <unistd.h>
 #include <limits.h>
 
@@ -63,7 +62,6 @@ void rate_library_create(char* filename, int size) {
 
     int n = -1;
     int subindex = -1;
-
     char cwd[PATH_MAX];
     getcwd(cwd, sizeof(cwd));
     fprintf(stderr, "CWD = %s\n", cwd);

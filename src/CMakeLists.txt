@@ -8,7 +8,6 @@ add_subdirectory(core)
 # GPU components (only if enabled)
 # ------------------------------------------------------------
 if(ENABLE_GPU)
-	#add_subdirectory(gpu) # <-- this defines burner_gpu
 	add_subdirectory(hipcore)
 	add_subdirectory(gpu)
 endif()
@@ -36,19 +35,16 @@ else()
     message(STATUS "Building CPU executable")
 
     add_executable(hyperion
-	main.c
-	core/init.c
-	core/kill.c
-	core/store.c
-	core/bn_burner.c
+        main.c
+        core/bn_burner.c
     )
 
     target_link_libraries(hyperion
         PRIVATE
             hyperion_core
             hyperion_parse
-	    ${HYPERION_EXTRA_LIBS}
-	    m
+            ${HYPERION_EXTRA_LIBS}
+            m
     )
 
 endif()
