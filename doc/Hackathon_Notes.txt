@@ -1,0 +1,110 @@
+Sub project objective:
+
+I need either a CPU shell script to run on the node, 
+or a C++ compile function. It needs to establish an 
+array of integers that will become an independent 
+axis. It needs to then execute my code for each point 
+on the axis and return the total time of computation 
+from my code and save it to an array that will be the 
+independent axis.
+
+Comment:
+I can see benefits and limitations for doing this all in c++ but likewise I see benefits and limitations from the shell scripting side. The real answer might be just using both
+
+Lastly I think because the fidelity of the x axis determines how much resolution I will get in my final image if I scail this big enough(by taking larger and larger sample rate) I can start to see the need for parallelism in this process 
+
+
+x[i] = ZONES
+y[i] = runtime
+
+I need to:
+
+Define your parameter array
+Launch multiple jobs or job steps
+Each run handles ONE parameter value
+
+Use:
+Shell / Slurm → orchestration
+C++ → measurement + output
+
+Same as FENN:
+#include <chrono>
+    auto start = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::duration<double>(end - start).count();
+
+
+#!/bin/bash
+
+params=(64 128 256 512 1024)
+
+> results.txt
+
+It I had to just do it serial it would be:
+
+for p in "${params[@]}"; do
+    ./my_executable $p >> results.txt
+done
+
+
+if I want to call in parallel I add wait:
+
+#!/bin/bash
+
+params=(64 128 256 512 1024)
+
+> results.txt
+
+for p in "${params[@]}"; do
+    ./my_executable $p >> results.txt &
+done
+
+wait
+
+
+#!/bin/bash
+#SBATCH -A your_project
+#SBATCH -J sweep
+#SBATCH -o sweep_%A_%a.out
+#SBATCH -t 00:30:00
+#SBATCH -N 1
+#SBATCH --gpus=1
+#SBATCH --array=0-4
+
+params=(64 128 256 512 1024)
+
+p=${params[$SLURM_ARRAY_TASK_ID]}
+
+./my_executable $p > result_${p}.txt
+
+I need each parameter to run on its own allocation
+
+
+Aggregate results
+
+cat result_*.txt > results.txt
+sort -n results.txt -o results.txt
+
+//////////
+
+significants of #SBATCH --array=0-4
+
+“Submit 5 independent jobs to the scheduler, each with a different index.”
+
+SLURM_ARRAY_TASK_ID = 0
+SLURM_ARRAY_TASK_ID = 1
+SLURM_ARRAY_TASK_ID = 2
+SLURM_ARRAY_TASK_ID = 3
+SLURM_ARRAY_TASK_ID = 4
+
+These can run:
+
+simultaneously (if resources available)
+or queued independently
+
+Now I can just generate the x axis values using some prescriptioin
+
+so for 1000 
+#SBATCH --array=0-999
+
+p=$(( 100 + 10 * SLURM_ARRAY_TASK_ID ))
