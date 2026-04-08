@@ -1,3 +1,12 @@
+TO DO:
+
+[ ] I need to change the receipt output that is printed in scripts/ to have time an date and info
+	minimal output from main
+[ ] I need to add crono in to cmake pipeline
+
+[ ] I need to create shell script to Aggregate results
+
+
 Sub project objective:
 
 I need either a CPU shell script to run on the node, 
@@ -108,3 +117,8 @@ so for 800
 #SBATCH --array=0-799
 
 p=$(( 100 + 10 * SLURM_ARRAY_TASK_ID ))
+
+
+*///////////////////////*
+
+
