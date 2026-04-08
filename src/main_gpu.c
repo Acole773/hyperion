@@ -19,11 +19,26 @@
 int run_batch(void);
 
 int main(int argc, char** argv) {
-    fprintf(stderr, ">>> ENTERED MAIN <<<\n");
-    fflush(stderr);
-    fprintf(stderr, "MAIN: before gpu_backend_init\n");
-    fflush(stderr);
+    /*    DEFAULT BEHAVOR    */
+
     int zones = BATCHCNT;
+
+    if (argc > 1) {
+        char* end; //It tells you where parsing stopped
+        long val = strtol(argv[1], &end, 10); //Same as atoi, but more flexible
+
+        if (*end != '\0' || val <= 0) {  //insure the entire string was a valid integer
+            fprintf(stderr, "Invalid zones argument: %s\n", argv[1]);
+            return EXIT_FAILURE;
+        }
+
+        zones = (int)val;
+        fprintf(stderr, "Using zones from CLI: %d\n", zones);
+    } else {
+        fprintf(stderr, "Using default zones: %d\n", zones);
+    }
+    fflush(stderr);
+
     hyperion_data_dir = getenv("HYPERION_DATA_DIR");
     if (!hyperion_data_dir) {
         fprintf(stderr,
@@ -32,25 +47,17 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    printf("Initializing Hyperion...\n");
     hyperion_init_(); // build network on host
-    printf("Hyperion initialized.\n");
-    printf("Starting GPU backend init...\n");
     if (gpu_backend_init(zones) == EXIT_FAILURE) {
 	fprintf(stderr, "GPU backend init failed\n");
         return EXIT_FAILURE;
     }
-    printf("GPU backend init done.\n");
-    printf("Starting run_batch...\n");
     if (run_batch() == EXIT_FAILURE) {
 	fprintf(stderr, "run_batch failed\n");
         return EXIT_FAILURE;
     }
-    printf("run_batch done.\n");
 
-    printf("Finalizing GPU backend...\n");
     gpu_backend_finalize();
-    printf("GPU backend finalize done.\n");
 
     return EXIT_SUCCESS;
 }
@@ -64,7 +71,6 @@ int run_batch(void) {
     int* zone;
     int* kstep;
 
-    printf("Allocating host arrays...\n");
     double* _scope_xin = malloc((size * BATCHCNT) * sizeof(double) + 0x40);
     double* _scope_xout = malloc((size * BATCHCNT) * sizeof(double) + 0x40);
     double* _scope_sdotrate = malloc(BATCHCNT * sizeof(double) + 0x40);
@@ -74,13 +80,11 @@ int run_batch(void) {
 
     double* temp = malloc(BATCHCNT * sizeof(double));
     double* dens = malloc(BATCHCNT * sizeof(double));
-    printf("Host arrays allocated.\n");
 
     /**********************************
      *
      * *******************************/
 
-    printf("Copying initial conditions into xin...\n");
     for (int i = 0; i < BATCHCNT; i++) {
 	double* current_xin = xin + (size *i);
         memset(current_xin, 0, size * sizeof(double));
@@ -89,11 +93,10 @@ int run_batch(void) {
         temp[i] = 5e09;
         dens[i] = 1e08;
     }
-    printf("Initial conditions copied.\n");
      
 
 
-    /*printf("Copying initial conditions into xin...\n");
+/*
     srand((unsigned int)time(NULL));
 
     for (int i = 0; i < BATCHCNT; i++) {
@@ -109,7 +112,6 @@ int run_batch(void) {
         temp[i] = 5e09 * factor_T;
         dens[i] = 1e08 * factor_D;
      }
-    printf("Initial conditions copied.\n");
 */
     
 
@@ -127,7 +129,6 @@ int run_batch(void) {
  *  Not sure if the truncation I did will cause a bunch-up at 3 sigma.
  *--------------------------------------------------------------*/
 /*
-    printf("Copying initial conditions into xin (Gaussian)...\n");
     srand((unsigned int)time(NULL));
 
     // variable definitions grouped together
@@ -166,7 +167,6 @@ int run_batch(void) {
         dens[i] = 1e08 * (1.0 + delta_D);
     }
 
-    printf("Initial conditions (Gaussian) copied.\n");
     
 */
     /**********************************
@@ -178,7 +178,6 @@ int run_batch(void) {
     //NEED to INITIALIZE DEVICE HERE
     
     // WARMUP
-    printf("Launching GPU burner kernel (warmup)...\n");
     gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &zones);
 

@@ -23,8 +23,6 @@ void hyperion_burner_(double* tstep,
 
 int gpu_backend_init(int zones)
 {
-    fprintf(stderr, "GPU_BACKEND_INIT (HIP) entered\n");
-    fflush(stderr);
     // Select device
     int dev = select_best_device();
     if (dev < 0) {

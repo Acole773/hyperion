@@ -50,8 +50,6 @@ double* d_flux = nullptr;
 void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
                       double* HYP_RESTRICT xout, double* sdotrate,
                       uchar* burned_zone, int* zones) {
-    fprintf(stderr, "HYPERION_BURNER entered\n");
-    fflush(stderr);
 
         hyperion_burner_kernel(tstep, temp, dens, xin, xout, sdotrate, *zones);
 }
@@ -61,8 +59,6 @@ void hyperion_burner_(double* tstep, double* temp, double* dens, double* xin,
 // -----------------------------------------------------------------------------
 int device_init(int zones) {
     hipError_t e;
-    fprintf(stderr, "DEVICE_INIT entered (zones=%d)\n", zones);
-    fflush(stderr);
 
     printf("[bn_burner_gpu] device_init called with zones=%d\n", zones);
     int error = 0;
@@ -126,10 +122,8 @@ int device_init(int zones) {
 static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
                                    double* xin, double* xout, double* sdotrate,
                                    int zones) {
-    fprintf(stderr, "KERNEL WRAPPER entered\n");
-    fflush(stderr);
     // Debug prints
-    printf("[bn_burner_gpu] hyperion_burner_kernel: zones=%d\n", zones);
+    //printf("[bn_burner_gpu] hyperion_burner_kernel: zones=%d\n", zones);
 
     // Copy per-zone arrays to device
     hipMemcpy(args.temp, temp, zones * sizeof(double), hipMemcpyHostToDevice);
@@ -151,7 +145,6 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     size_t sharedmem_allocation =
 	sizeof(double) * (NUM_REACTIONS + blockdim.x); 
 
-    printf("[bn_burner_gpu] Launching kernel...\n");
     hyperion_burner_dev_kernel<<<griddim, blockdim, sharedmem_allocation>>>(
 	args.temp, args.dens, args.xin, args.xout, args.sdotrate,
 	args.prefactor, args.p_0, args.p_1, args.p_2, args.p_3,
@@ -170,9 +163,7 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     hipMemcpy(xout, args.xout, zones * num_species * sizeof(double), hipMemcpyDeviceToHost);
     hipMemcpy(sdotrate, args.sdotrate, zones * sizeof(double), hipMemcpyDeviceToHost);
 
-    printf("[bn_burner_gpu] Kernel execution completed.\n");
 }
-
 // -----------------------------------------------------------------------------
 // Free all allocated device memory
 // -----------------------------------------------------------------------------
@@ -211,5 +202,4 @@ void hip_killall_device_ptrs() {
 
     #undef HIP_FREE
 
-    printf("[bn_burner_gpu] All device pointers freed.\n");
 }

@@ -15,7 +15,7 @@ Lastly I think because the fidelity of the x axis determines how much resolution
 
 
 x[i] = ZONES
-y[i] = runtime
+y[i] = RUNTIME
 
 I need to:
 
@@ -104,7 +104,7 @@ or queued independently
 
 Now I can just generate the x axis values using some prescriptioin
 
-so for 1000 
-#SBATCH --array=0-999
+so for 800 
+#SBATCH --array=0-799
 
 p=$(( 100 + 10 * SLURM_ARRAY_TASK_ID ))
