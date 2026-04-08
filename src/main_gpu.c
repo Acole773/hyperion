@@ -16,7 +16,7 @@
 
 #define BATCHCNT 8 // Number of zones to compute, this will get over written by main arguments. 
 
-int run_batch(void);
+int run_batch(int);
 
 int main(int argc, char** argv) {
     /*    DEFAULT BEHAVOR    */
@@ -25,21 +25,21 @@ int main(int argc, char** argv) {
 
     /*    OVERWRITE WITH MAIN ARGUMENTS    */
 
-    if (argc > 1) {
-        char* end; //It tells you where parsing stopped
-        long val = strtol(argv[1], &end, 10); //Same as atoi, but more flexible
+    if (argc > 1) {
+        char* end; //It tells you where parsing stopped
+	long val = strtol(argv[1], &end, 10); //Same as atoi, but more flexible
 
-        if (*end != '\0' || val <= 0) {  //insure the entire string was a valid integer
-            fprintf(stderr, "Invalid zones argument: %s\n", argv[1]);
-            return EXIT_FAILURE;
-        }
+	if (*end != '\0' || val <= 0) {  //insure the entire string was a valid integer
+	    fprintf(stderr, "Invalid zones argument: %s\n", argv[1]);
+	    return EXIT_FAILURE;
+	}
 
-        zones = (int)val;
-        fprintf(stderr, "Using zones from CLI: %d\n", zones);
-    } else {
-        fprintf(stderr, "Using default zones: %d\n", zones);
-    }
-    fflush(stderr);
+	zones = (int)val;
+	fprintf(stderr, "Using zones from CLI: %d\n", zones);
+    } else {
+	fprintf(stderr, "Using default zones: %d\n", zones);
+    }
+    fflush(stderr);
 
     hyperion_data_dir = getenv("HYPERION_DATA_DIR");
     if (!hyperion_data_dir) {
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 	fprintf(stderr, "GPU backend init failed\n");
         return EXIT_FAILURE;
     }
-    if (run_batch() == EXIT_FAILURE) {
+    if (run_batch(zones) == EXIT_FAILURE) {
 	fprintf(stderr, "run_batch failed\n");
         return EXIT_FAILURE;
     }
@@ -64,30 +64,30 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
-int run_batch(void) {
+int run_batch(int zones) {
     int size = SIZE;
 
     double tstep = 1e-06;
-    unsigned char* burned_zone = malloc(BATCHCNT * sizeof(unsigned char));
-    memset(burned_zone, 0, BATCHCNT);
-    int* zone;
+    unsigned char* burned_zone = malloc(zones * sizeof(unsigned char));
+    memset(burned_zone, 0, zones);
+
     int* kstep;
 
-    double* _scope_xin = malloc((size * BATCHCNT) * sizeof(double) + 0x40);
-    double* _scope_xout = malloc((size * BATCHCNT) * sizeof(double) + 0x40);
-    double* _scope_sdotrate = malloc(BATCHCNT * sizeof(double) + 0x40);
+    double* _scope_xin = malloc((size * zones) * sizeof(double) + 0x40);
+    double* _scope_xout = malloc((size * zones) * sizeof(double) + 0x40);
+    double* _scope_sdotrate = malloc(zones * sizeof(double) + 0x40);
     double* xin = (double*)(((uintptr_t)_scope_xin) + 0x3F & ~0x3F);
     double* xout = (double*)(((uintptr_t)_scope_xout) + 0x3F & ~0x3F);
     double* sdotrate = (double*)(((uintptr_t)_scope_sdotrate) + 0x3F & ~0x3F);
 
-    double* temp = malloc(BATCHCNT * sizeof(double));
-    double* dens = malloc(BATCHCNT * sizeof(double));
+    double* temp = malloc(zones * sizeof(double));
+    double* dens = malloc(zones * sizeof(double));
 
     /**********************************
      *
      * *******************************/
 
-    for (int i = 0; i < BATCHCNT; i++) {
+    for (int i = 0; i < zones; i++) {
 	double* current_xin = xin + (size *i);
         memset(current_xin, 0, size * sizeof(double));
 	current_xin[12] = 0.04166;
@@ -101,7 +101,7 @@ int run_batch(void) {
 /*
     srand((unsigned int)time(NULL));
 
-    for (int i = 0; i < BATCHCNT; i++) {
+    for (int i = 0; i < zones; i++) {
         memcpy(xin + (size * i), x, size * sizeof(double));
 
         // random factor between 1/1.5 and 1.5 
@@ -141,7 +141,7 @@ int run_batch(void) {
     double z1, z2;
     double delta_T, delta_D;
 
-    for (int i = 0; i < BATCHCNT; i++) {
+    for (int i = 0; i < zones; i++) {
         memcpy(xin + (size * i), x, size * sizeof(double));
 
     // Gaussian sample for temperature
@@ -175,13 +175,13 @@ int run_batch(void) {
      *
      * *******************************/
 
-
-    int zones = BATCHCNT;
     //NEED to INITIALIZE DEVICE HERE
     
     // WARMUP
+
+    int wrm_zones = 16; 
     gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
-                     &zones);
+                     &wrm_zones);
 
     unsigned long long cycles = __rdtsc();
 
@@ -198,12 +198,12 @@ int run_batch(void) {
     printf("\n");
 
     printf("Sdotrate for the batch.\n");
-    for (int i = 0; i < BATCHCNT; i++) {
+    for (int i = 0; i < zones; i++) {
         printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
     }
 
     printf("Total cycles per run of batch (avg, rnded): %lld \n",
-           (cycles_ - cycles) / BATCHCNT);
+           (cycles_ - cycles) / zones);
 
     free(burned_zone);
     free(_scope_xin);
