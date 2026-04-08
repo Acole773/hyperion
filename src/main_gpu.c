@@ -14,7 +14,7 @@
 
 #include <x86intrin.h>
 
-#define BATCHCNT 8 // Number of zones to compute
+#define BATCHCNT 8 // Number of zones to compute, this will get over written by main arguments. 
 
 int run_batch(void);
 
@@ -22,6 +22,8 @@ int main(int argc, char** argv) {
     /*    DEFAULT BEHAVOR    */
 
     int zones = BATCHCNT;
+
+    /*    OVERWRITE WITH MAIN ARGUMENTS    */
 
     if (argc > 1) {
         char* end; //It tells you where parsing stopped
