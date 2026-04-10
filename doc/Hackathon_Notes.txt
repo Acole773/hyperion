@@ -143,4 +143,65 @@ p=$(( 100 + 10 * SLURM_ARRAY_TASK_ID ))
 
 *///////////////////////*
 
+Aggregate results:
 
+*/ SIMPLE /*
+
+#!/bin/bash
+
+OUTPUT="aggregated_results.txt"
+TMP="tmp_results.txt"
+
+echo "zones wall_time gpu_time cycles" > $OUTPUT
+
+for file in result_*.txt; do
+    awk '
+        /zones, wall_time, gpu_time, cycles/ {
+            getline
+            print
+        }
+    ' "$file" >> $TMP
+done
+
+# Sort numerically by zones (column 1)
+sort -n $TMP >> $OUTPUT
+
+rm $TMP
+
+echo "Sorted aggregation complete → $OUTPUT"
+
+
+*/     Sorted output      /*
+
+#!/bin/bash
+
+OUTPUT="aggregated_results.txt"
+TMP="tmp_results.txt"
+
+echo "zones wall_time gpu_time cycles" > $OUTPUT
+
+for file in result_*.txt; do
+    awk '
+        /zones, wall_time, gpu_time, cycles/ {
+            getline
+            print
+        }
+    ' "$file" >> $TMP
+done
+
+# Sort numerically by zones (column 1)
+sort -n $TMP >> $OUTPUT
+
+rm $TMP
+
+echo "Sorted aggregation complete → $OUTPUT"
+
+
+/*    CSV format      */
+
+echo "zones,wall_time,gpu_time,cycles" > aggregated.csv
+
+awk '/zones, wall_time, gpu_time, cycles/{getline; print}' result_*.txt \
+| sort -n \
+| awk '{printf "%s,%s,%s,%s\n",$1,$2,$3,$4}' \
+>> aggregated.csv
