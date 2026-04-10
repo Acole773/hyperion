@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=1
 #!/bin/bash
-#SBATCH -A ast218                     # Project allocation
+#SBATCH -A AST218                     # Project allocation
 #SBATCH -J hyperion_parallel_150      # Job name
 #SBATCH -o %x-%j.out                  # Output file
 #SBATCH -t 00:10:00                   # Walltime
