@@ -7,6 +7,25 @@ TO DO:
 [ ] I need to create shell script to Aggregate results
 
 
+
+
+FEEDBACK
+
+Just a few random comments:
+
+1). As you are already working on - the timers should be in the code to insulate the timings 
+	from response time fluctuations on the login node.
+2). I would recommend to test your outer job submission script with the 
+	https://code.ornl.gov/olcf/hello_jobstep utility to ensure that the CPU-core and 
+	GPU-affinity/placement is what you want.
+3). Regarding the SLURM batch script clause "#SBATCH --array=0-4", I am not certain if it's guaranteed 
+	that different job steps never run concurrently on the same compute node.  If they were to run 
+	concurrently on the same node then that could also contaminate timings due to some shared 
+	resources on the compute node, i.e., file-I/O  and memory CPU memory bandwidth.
+4). I assume that all input- and output-data are under /lustre/orion/* and not under $HOME and the jobs 
+	are run from lustre.
+
+
 Sub project objective:
 
 I need either a CPU shell script to run on the node, 
@@ -18,9 +37,12 @@ from my code and save it to an array that will be the
 independent axis.
 
 Comment:
-I can see benefits and limitations for doing this all in c++ but likewise I see benefits and limitations from the shell scripting side. The real answer might be just using both
+I can see benefits and limitations for doing this all in c++ but likewise I see benefits and limitations 
+	from the shell scripting side. The real answer might be just using both
 
-Lastly I think because the fidelity of the x axis determines how much resolution I will get in my final image if I scail this big enough(by taking larger and larger sample rate) I can start to see the need for parallelism in this process 
+Lastly I think because the fidelity of the x axis determines how much resolution I will get in my final 
+	image if I scail this big enough(by taking larger and larger sample rate) I can start to see the 
+	need for parallelism in this process 
 
 
 x[i] = ZONES
