@@ -31,7 +31,7 @@ module load hdf5/1.14.5-mpi            # HDF5 if needed
 # =========================
 # Run directory
 # =========================
-BASE= $(PWD)
+BASE=$(PWD)/..
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 RESULTS_DIR=$BASE/results/frontier/hip/$RUN_ID
 
