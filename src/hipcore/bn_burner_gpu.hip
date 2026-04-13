@@ -87,8 +87,8 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     double* reduce_buf = flux + NUM_REACTIONS;	      // blockDim.x
 
     __shared__ double norm_sum;
-    __shared__ double t, dt, t_end;
-    __shared__ int volatile done;
+    double t, dt, t_end;
+    int done;
 
     // ------------------------------------------------------------
     // Initial normalization: xout = xin / aa
@@ -140,25 +140,14 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     // Time integration
     // ------------------------------------------------------------
 
-    if (tid == 0) {
-        t  = 1e-20;
-        dt = t * 1e-2;
-	t_end = tstep;
-	done = 0;
-    }
-    __syncthreads(); // Ensure every thread sees the initial t and dt
-
-    while (true) {
-    	__syncthreads();
-
-    	if (tid == 0){
-	    if (t >= t_end || !isfinite(t) || dt <= 0.0)
-                done = 1;
-	}
-	__syncthreads();
-	
-    	if (done) break;	
     
+    t  = 1e-20;
+    dt = t * 1e-2;
+    t_end = tstep;
+    done = 0;
+
+    while (!done) {
+
         // --------------------------------------------------------
         // Flux computation
         // --------------------------------------------------------
@@ -196,7 +185,7 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
 	    GPU_ASSERT_FINITE(flux[r], "flux", r, f );
         }
 
-        __syncthreads();
+        __syncthreads(); //this ensures all fluxes have been updated
 
         // --------------------------------------------------------
         // Species updates
@@ -207,9 +196,9 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
             double plus  = 0.0;
 	    double minus = 0.0;
 
-            for (int j = p0; j <= f_plus_max[i]; ++j)
+            for (int j = p0; j <= f_plus_max[i]; ++j)             //this could be source of divergence
 	        plus += f_plus_factor[j] * flux[f_plus_map[j]];
-	    for (int j = m0; j <= f_minus_max[i]; ++j)
+	    for (int j = m0; j <= f_minus_max[i]; ++j)		  // ''
 		minus += f_minus_factor[j] * flux[f_minus_map[j]];
 
 
@@ -229,13 +218,13 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         }
         __syncthreads();
 
-  	if (tid == 0) {
-            t += dt;        
-            dt = 1e-4 * t;
-	    if (t + dt > t_end)
-	         dt = max(t_end - t, 1e-30);        
-	}
-	__syncthreads();
+        t += dt;        
+        dt = 1e-4 * t;
+	if (t + dt > t_end)
+	     dt = max(t_end - t, 1e-30);        
+
+        if (t >= t_end || !isfinite(t) || dt <= 0.0)
+            done = 1;
     }
 
     // ------------------------------------------------------------

@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include <x86intrin.h>
+#include <hip/hip_runtime.h>
 
 #define BATCHCNT 8 // Number of zones to compute, this will get over written by main arguments. 
 
@@ -82,6 +83,23 @@ int run_batch(int zones) {
 
     double* temp = malloc(zones * sizeof(double));
     double* dens = malloc(zones * sizeof(double));
+
+    // =========================
+    // Timing variables
+    // =========================
+    struct timespec start, end;
+    double wall_time;
+
+    // GPU timing
+    hipEvent_t gpu_start, gpu_stop;
+    float gpu_time_ms;   // HIP returns milliseconds
+    double gpu_time;     // convert to seconds
+
+    // =========================
+    // Setup GPU timers
+    // =========================
+    hipEventCreate(&gpu_start);
+    hipEventCreate(&gpu_stop);
 
     /**********************************
      *
@@ -179,16 +197,60 @@ int run_batch(int zones) {
     
     // WARMUP
 
-    int wrm_zones = 16; 
+    int wrm_zones = 8; 
     gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &wrm_zones);
 
     unsigned long long cycles = __rdtsc();
 
+    // =========================
+    // Start timers
+    // =========================
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    hipEventRecord(gpu_start, 0);
+    
     gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &zones);
 
+
+    // =========================
+    // Stop timers
+    // =========================
+    hipEventRecord(gpu_stop, 0);
+    hipEventSynchronize(gpu_stop); // wait for GPU
+
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    // =========================
+    // Compute elapsed times
+    // =========================
+
+    // Wall clock (seconds)
+    wall_time =
+	(end.tv_sec - start.tv_sec) +
+	(end.tv_nsec - start.tv_nsec) * 1e-9;
+
+    // GPU time (convert ms → seconds)
+    hipEventElapsedTime(&gpu_time_ms, gpu_start, gpu_stop);
+    gpu_time = gpu_time_ms * 1e-3;
+
+    // =========================
+    // Cleanup (important at scale)
+    // =========================
+    hipEventDestroy(gpu_start);
+    hipEventDestroy(gpu_stop);
+
+    // wall_time → total runtime
+    // gpu_time  → kernel runtime	
+
+
     unsigned long long cycles_ = __rdtsc();
+
+    printf("zones, wall_time, gpu_time, cycles \n" );
+
+    printf("%d %f %f %llu\n", zones, wall_time, gpu_time, cycles_);
+
+    printf( "END OF TABLE\n");
 
     printf("Result:\n");
 

@@ -9,23 +9,29 @@
 #SBATCH -n 1                          # One MPI task
 #SBATCH -c 1                          # One CPU core
 #SBATCH --gres=gpu:1                  # <-- You MUST request a GPU
-#SBATCH --exclusive                   # Optional: full node for debugging
 
 
 # =========================
 # Environment
 # =========================
-#module purge                           # <-- ALWAYS purge first on Frontier
+#module reset 
 
-#module load PrgEnv-amd                 # AMD compiler environment
-#module load rocm/6.2.4                 # HIP/ROCm
-#module load craype-accel-amd-gfx90a    # Correct GPU target
-#module load hdf5/1.14.5-mpi            # HDF5 if needed
-#module load darshan-runtime/3.4.7-mpi  # Darshan handles I/O for Frontier
+#module load cpe/26.03
+#module load PrgEnv-amd
+#module load amd/7.2.0
+#module load rocm/7.2.0
+#module load craype-accel-amd-gfx90a
+#module load cray-hdf5-parallel
+
+#module unload darshan-runtime
+#module unload cray-libsci/26.03.0
+
+#export LD_LIBRARY_PATH=${CRAY_LD_LIBRARY_PATH}:${LD_LIBRARY_PATH}
 
 source env_setup.txt
 
-# =========================
+ml -t
+
 # Run directory
 # =========================
 BASE=$(pwd)/..
@@ -47,7 +53,9 @@ echo "Job started at: $(date)"
 # =========================
 cp $BASE/build-frontier-hip/src/hyperion .
 export HYPERION_DATA_DIR=$BASE
-srun ./hyperion
+#rocprofv3 --runtime-trace -- ./hyperion
+rocprofv3 --pmc VALUUtilization -f csv --kernel-trace --stats -- ./hyperion
+
 
 echo "Job finished at: $(date)"
 

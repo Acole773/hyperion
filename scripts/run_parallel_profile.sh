@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -A ast218                     # Project allocation
+#SBATCH -reservation = hackathon1     # Hackathon reservation 
 #SBATCH -J sweep		      # Job name
 #SBATCH -o sweep_%A_%a.out            # Output file
 #SBATCH -t 00:30:00                   # Walltime
@@ -51,6 +52,6 @@ if [ -z "$p" ]; then
     exit 1
 fi
 
-srun $EXEC $p > result_${p}.txt 2>&1
+rocprofv3 --kernel-trace --stats -- $EXEC $p > result_${p}.txt 2>&1
 
 echo "Finished param $p"
