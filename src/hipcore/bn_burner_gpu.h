@@ -69,6 +69,7 @@ void hip_killall_device_ptrs(void);
 
 #ifdef __cplusplus
 extern "C" __global__ void hyperion_burner_dev_kernel(
+    int Nzones,
     double* temp, double* dens, double* xin, double* xout, double* sdotrate,
     double* prefactor, double* p_0, double* p_1,
     double* p_2, double* p_3, double* p_4, double* p_5, double* p_6, double* aa,
@@ -78,6 +79,7 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     int* num_react_species, double* real_vals, double* rate_g);
 #else
 __global__ void hyperion_burner_dev_kernel(
+    int Nzones,
     double* temp, double* dens, double* xin, double* xout, double* sdotrate,
     double* prefactor, double* p_0, double* p_1,
     double* p_2, double* p_3, double* p_4, double* p_5, double* p_6, double* aa,
