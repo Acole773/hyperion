@@ -141,7 +141,8 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
 
     // Kernel launch parameters
     dim3 blockdim(256, 1, 1);
-    dim3 griddim(zones, 1, 1);
+    int blocks = 440;
+    dim3 griddim(blocks, 1, 1);
     size_t sharedmem_allocation =
 	sizeof(double) * (NUM_REACTIONS + blockdim.x); 
 

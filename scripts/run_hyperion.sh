@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -A ast218                     # Project allocation
-#SBATCH --reservation=hackathon1
+#SBATCH --reservation=hackathon2
 #SBATCH -J hyperion_parallel_150      # Job name
 #SBATCH -o %x-%j.out                  # Output file
 #SBATCH -t 00:30:00                   # Walltime
@@ -47,7 +47,7 @@ echo "Job started at: $(date)"
 # =========================
 cp $BASE/build-frontier-hip/src/hyperion .
 export HYPERION_DATA_DIR=$BASE
-srun ./hyperion
+srun ./hyperion 2000
 
 echo "Job finished at: $(date)"
 
