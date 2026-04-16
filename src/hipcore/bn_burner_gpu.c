@@ -146,7 +146,8 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
 	sizeof(double) * (NUM_REACTIONS + blockdim.x); 
 
     hyperion_burner_dev_kernel<<<griddim, blockdim, sharedmem_allocation>>>(
-	args.temp, args.dens, args.xin, args.xout, args.sdotrate,
+	zones,
+        args.temp, args.dens, args.xin, args.xout, args.sdotrate,
 	args.prefactor, args.p_0, args.p_1, args.p_2, args.p_3,
 	args.p_4, args.p_5, args.p_6, args.aa, args.q_value,
 	args.reactant_1, args.reactant_2, args.reactant_3,
