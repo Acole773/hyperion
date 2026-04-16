@@ -201,6 +201,8 @@ int run_batch(int zones) {
     gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &wrm_zones);
 
+    int num_iterations = 14;
+
     unsigned long long cycles = __rdtsc();
 
     // =========================
@@ -209,15 +211,16 @@ int run_batch(int zones) {
     clock_gettime(CLOCK_MONOTONIC, &start);
     hipEventRecord(gpu_start, 0);
     
-    gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
-                     &zones);
-
+    for (int iter = 0; iter < num_iterations; iter++) {
+        gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
+                         &zones);
+    }
 
     // =========================
     // Stop timers
     // =========================
     hipEventRecord(gpu_stop, 0);
-    hipEventSynchronize(gpu_stop); // wait for GPU
+    hipEventSynchronize(gpu_stop);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
 
@@ -240,32 +243,32 @@ int run_batch(int zones) {
     hipEventDestroy(gpu_start);
     hipEventDestroy(gpu_stop);
 
-    // wall_time → total runtime
-    // gpu_time  → kernel runtime	
-
+    double avg_wall_time = wall_time / num_iterations;
+    double avg_gpu_time = gpu_time / num_iterations;
 
     unsigned long long cycles_ = __rdtsc();
 
-    printf("zones, wall_time, gpu_time, cycles \n" );
+    printf("iterations, zones, avg_wall_time, avg_gpu_time, total_wall_time, total_gpu_time, cycles \n");
 
-    printf("%d %f %f %llu\n", zones, wall_time, gpu_time, cycles_);
+    printf("%d %d %f %f %f %f %llu\n", num_iterations, zones,
+           avg_wall_time, avg_gpu_time, wall_time, gpu_time, cycles_);
 
     printf( "END OF TABLE\n");
 
-    printf("Result:\n");
+    printf("Result (from last iteration):\n");
 
     for (int i = 0; i < size; i++) {
         printf("%4i %.5e\n", i, xout[i]);
     }
     printf("\n");
 
-    printf("Sdotrate for the batch.\n");
+    printf("Sdotrate for the batch (from last iteration).\n");
     for (int i = 0; i < zones; i++) {
         printf("sdot[%i]: %.5e\n", i, sdotrate[i]);
     }
 
-    printf("Total cycles per run of batch (avg, rnded): %lld \n",
-           (cycles_ - cycles) / zones);
+    printf("Total cycles per run of batch (avg over %d iterations, rnded): %lld \n",
+           num_iterations, (cycles_ - cycles) / (zones * num_iterations));
 
     free(burned_zone);
     free(_scope_xin);

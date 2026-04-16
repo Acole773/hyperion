@@ -229,52 +229,69 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     
         // ------------------------------------------------------------
         // Final renormalization (block reduction)
+        //   Phase 1: intra-wave reduction via warp shuffle
+        //   Phase 2: cross-wave reduction via LDS
         // ------------------------------------------------------------
         double local = 0.0;
         for (int i = tid; i < SIZE; i += blockDim.x)
             local += xout_zone[i] * aa_zone[i];
-    
-        reduce_buf[tid] = local;
-    
+
+        // Intra-wave reduction (wavefront = 64 lanes on gfx90a)
+        for (int offset = 32; offset > 0; offset >>= 1)
+            local += __shfl_down(local, offset, 64);
+
+        int lane   = tid & 63;
+        int waveId = tid >> 6;
+
+        if (lane == 0)
+            reduce_buf[waveId] = local;
+
         __syncthreads();
-    
-        // Tree reduction
-        for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
-            if (tid < stride)
-                reduce_buf[tid] += reduce_buf[tid + stride];
-           __syncthreads();
+
+        // Cross-wave reduction: wave 0 reduces the 4 partial sums
+        if (tid < 4) {
+            local = reduce_buf[tid];
+            for (int offset = 2; offset > 0; offset >>= 1)
+                local += __shfl_down(local, offset, 64);
         }
-    
+
         if (tid == 0)
-            norm_sum = 1.0 / reduce_buf[0];
-    
+            norm_sum = 1.0 / local;
+
         __syncthreads();
-    
+
         for (int i = tid; i < SIZE; i += blockDim.x)
             xout_zone[i] = (xout_zone[i] * aa_zone[i] * norm_sum) / aa_zone[i];
-    
+
         __syncthreads();
-    
-    
+
+
         // ------------------------------------------------------------
         // Energy generation (block reduction)
+        //   Phase 1: intra-wave reduction via warp shuffle
+        //   Phase 2: cross-wave reduction via LDS
         // ------------------------------------------------------------
-    
+
         double e_local = 0.0;
         for (int r = tid; r < NUM_REACTIONS; r += blockDim.x)
             e_local += flux[r] * q_value[r];
-    
-        reduce_buf[tid] = e_local;
+
+        for (int offset = 32; offset > 0; offset >>= 1)
+            e_local += __shfl_down(e_local, offset, 64);
+
+        if (lane == 0)
+            reduce_buf[waveId] = e_local;
+
         __syncthreads();
-    
-        for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
-            if (tid < stride)
-                reduce_buf[tid] += reduce_buf[tid + stride];
-            __syncthreads();
+
+        if (tid < 4) {
+            e_local = reduce_buf[tid];
+            for (int offset = 2; offset > 0; offset >>= 1)
+                e_local += __shfl_down(e_local, offset, 64);
         }
-    
+
         if (tid == 0)
-            sdotrate[zone] = reduce_buf[0] * tstep * 9.5768e17;
+            sdotrate[zone] = e_local * tstep * 9.5768e17;
 
          __syncthreads();
     }
