@@ -143,8 +143,9 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     dim3 blockdim(256, 1, 1);
     int blocks = 440;
     dim3 griddim(blocks, 1, 1);
+    int num_waves = blockdim.x / 64;
     size_t sharedmem_allocation =
-	sizeof(double) * (NUM_REACTIONS + blockdim.x); 
+	sizeof(double) * (NUM_REACTIONS + num_waves); 
 
     hyperion_burner_dev_kernel<<<griddim, blockdim, sharedmem_allocation>>>(
 	zones,
