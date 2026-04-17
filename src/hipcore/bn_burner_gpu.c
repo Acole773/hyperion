@@ -142,7 +142,7 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     // Kernel launch parameters
     dim3 blockdim(256, 1, 1);
 
-    int blocks = 1024; //we can tune this to GPU specs! 
+    int blocks = 110; //we can tune this to GPU specs! 
     dim3 griddim(blocks, 1, 1);
     size_t sharedmem_allocation =
 	sizeof(double) * blockdim.x; //ONLY reduction buffer 
