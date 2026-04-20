@@ -3,3 +3,14 @@ object/*
 /build-frontier-hip/
 
 /build-AC/
+/build-local/
+/workloads/
+/asm_baseline/
+/asm_*/
+hyperion_build-*.out
+hyperion_run-*.out
+hyperion_compute_profile-*.out
+hyperion_profile-*.out
+output_*.txt
+analysis_*.txt
+profile_*/

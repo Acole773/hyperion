@@ -144,8 +144,23 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     int blocks = zones;
     dim3 griddim(blocks, 1, 1);
     int num_waves = blockdim.x / 64;
+    // Experiment 06: +NUM_REACTIONS doubles for LDS-resident `rate[]`.
+    // Experiment 09: +SIZE doubles for LDS-resident `xout_zone[]`.
+    // Experiment 10: +NUM_REACTIONS bytes for LDS-resident num_react_species
+    //                packed as unsigned char (values are 0..3).
+    // Experiment 11/12/13: +NUM_REACTIONS uchar each for reactant_1/2/3 LDS.
+    // Experiment 14: +2*(SIZE+1) short for f_plus_max / f_minus_max LDS
+    //                (SIZE+1 accounts for the leading sentinel at [0]).
+    // Experiment 15: +NUM_FLUXES_{PLUS,MINUS} ushort for f_plus_map/f_minus_map LDS.
+    // Experiment 16: +SIZE doubles for aa LDS (+ 8 bytes alignment slack).
+    // Experiment 19: +(NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) uchar for
+    //                f_plus_factor / f_minus_factor LDS.
     size_t sharedmem_allocation =
-	sizeof(double) * (NUM_REACTIONS + num_waves); 
+	sizeof(double) * (NUM_REACTIONS + num_waves + NUM_REACTIONS + SIZE)
+        + 4 * NUM_REACTIONS * sizeof(unsigned char)
+        + (2 * (SIZE + 1) + NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned short)
+        + (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned char)
+        + SIZE * sizeof(double) + 8;
 
     hyperion_burner_dev_kernel<<<griddim, blockdim, sharedmem_allocation>>>(
 	zones,
