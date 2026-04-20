@@ -201,7 +201,7 @@ int run_batch(int zones) {
     gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &wrm_zones);
 
-    int num_iterations = 14;
+    int num_iterations = 1;
 
     unsigned long long cycles = __rdtsc();
 

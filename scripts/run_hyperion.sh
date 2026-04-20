@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -A ast218                     # Project allocation
-#SBATCH --reservation=hackathon2
+#SBATCH --reservation=hackathon3
 #SBATCH -J hyperion_parallel_150      # Job name
 #SBATCH -o %x-%j.out                  # Output file
 #SBATCH -t 00:30:00                   # Walltime
@@ -11,6 +11,10 @@
 #SBATCH --gres=gpu:1                  # <-- You MUST request a GPU
 #SBATCH --exclusive                   # Optional: full node for debugging
 
+function mytime
+{
+  /usr/bin/time -f'%C\n^^^ Took %e seconds. exit_status=%x' "$@"
+}
 
 # =========================
 # Environment
@@ -47,7 +51,7 @@ echo "Job started at: $(date)"
 # =========================
 cp $BASE/build-frontier-hip/src/hyperion .
 export HYPERION_DATA_DIR=$BASE
-srun ./hyperion 2000
+mytime srun ./hyperion 110
 
 echo "Job finished at: $(date)"
 
