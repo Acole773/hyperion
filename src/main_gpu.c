@@ -17,12 +17,13 @@
 
 #define BATCHCNT 8 // Number of zones to compute, this will get over written by main arguments. 
 
-int run_batch(int);
+int run_batch(int, int);
 
 int main(int argc, char** argv) {
     /*    DEFAULT BEHAVOR    */
 
     int zones = BATCHCNT;
+    int num_iterations = 1;
 
     /*    OVERWRITE WITH MAIN ARGUMENTS    */
 
@@ -40,6 +41,19 @@ int main(int argc, char** argv) {
     } else {
 	fprintf(stderr, "Using default zones: %d\n", zones);
     }
+
+    if (argc > 2) {
+	char* end;
+	long val = strtol(argv[2], &end, 10);
+	if (*end != '\0' || val <= 0) {
+	    fprintf(stderr, "Invalid iterations argument: %s\n", argv[2]);
+	    return EXIT_FAILURE;
+	}
+	num_iterations = (int)val;
+	fprintf(stderr, "Using iterations from CLI: %d\n", num_iterations);
+    } else {
+	fprintf(stderr, "Using default iterations: %d\n", num_iterations);
+    }
     fflush(stderr);
 
     hyperion_data_dir = getenv("HYPERION_DATA_DIR");
@@ -55,7 +69,7 @@ int main(int argc, char** argv) {
 	fprintf(stderr, "GPU backend init failed\n");
         return EXIT_FAILURE;
     }
-    if (run_batch(zones) == EXIT_FAILURE) {
+    if (run_batch(zones, num_iterations) == EXIT_FAILURE) {
 	fprintf(stderr, "run_batch failed\n");
         return EXIT_FAILURE;
     }
@@ -65,7 +79,7 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
-int run_batch(int zones) {
+int run_batch(int zones, int num_iterations) {
     int size = SIZE;
 
     double tstep = 1e-06;
@@ -200,8 +214,6 @@ int run_batch(int zones) {
     int wrm_zones = 8; 
     gpu_burner(&tstep, temp, dens, xin, xout, sdotrate, burned_zone,
                      &wrm_zones);
-
-    int num_iterations = 1;
 
     unsigned long long cycles = __rdtsc();
 

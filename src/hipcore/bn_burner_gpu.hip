@@ -67,27 +67,82 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     int tid = threadIdx.x;
 
    
+    // LDS layout (dynamic shared memory):
+    //   flux       [NUM_REACTIONS]  - exp06 baseline
+    //   reduce_buf [num_waves]      - block-level reduction scratch
+    //   rate       [NUM_REACTIONS]  - exp06: moved from global rate_g
+    //   xout_lds   [SIZE]           - exp09: moved from global xout_zone.
+    //   nrs_lds    [NUM_REACTIONS]  - exp10: packed num_react_species as
+    //                                 unsigned char (values 1..3). Saves 4x
+    //                                 vs int. Read once per reaction in flux
+    //                                 loop, no need for the global reload.
+    const int num_waves_k = blockDim.x >> 6;
+    extern __shared__ double smem[];
+    double* flux       = smem;                              // NUM_REACTIONS
+    double* reduce_buf = flux + NUM_REACTIONS;              // num_waves
+    double* rate       = reduce_buf + num_waves_k;          // NUM_REACTIONS
+    double* xout_lds   = rate + NUM_REACTIONS;              // SIZE
+    unsigned char* nrs_lds  = (unsigned char*)(xout_lds + SIZE);  // NUM_REACTIONS bytes
+    unsigned char* r1_lds   = nrs_lds + NUM_REACTIONS;            // NUM_REACTIONS bytes
+    unsigned char* r2_lds   = r1_lds  + NUM_REACTIONS;            // NUM_REACTIONS bytes
+    unsigned char* r3_lds   = r2_lds  + NUM_REACTIONS;            // NUM_REACTIONS bytes
+    // Signed short so the leading sentinel (-1) at index 0 survives the cast.
+    // Length is SIZE + 1 because f_*_max carries a sentinel at [0] and the
+    // real upper bound for species i lives at [i + 1].
+    short* fp_max_lds = (short*)(r3_lds + NUM_REACTIONS);                      // SIZE + 1
+    short* fm_max_lds = fp_max_lds + (SIZE + 1);                               // SIZE + 1
+    unsigned short* fp_map_lds = (unsigned short*)(fm_max_lds + (SIZE + 1));   // NUM_FLUXES_PLUS
+    unsigned short* fm_map_lds = fp_map_lds + NUM_FLUXES_PLUS;                 // NUM_FLUXES_MINUS
+    // exp19: pack f_plus_factor / f_minus_factor as uchar (small integer
+    // stoichiometric coefficients; uchar->double conversion is exact).
+    unsigned char* fp_fac_lds = (unsigned char*)(fm_map_lds + NUM_FLUXES_MINUS); // NUM_FLUXES_PLUS bytes
+    unsigned char* fm_fac_lds = fp_fac_lds + NUM_FLUXES_PLUS;                    // NUM_FLUXES_MINUS bytes
+    // Pad to 8-byte alignment for the double aa_lds that follows.
+    double* aa_lds = (double*)(((uintptr_t)(fm_fac_lds + NUM_FLUXES_MINUS) + 7) & ~(uintptr_t)7);  // SIZE doubles
+    // exp11/12/13: pack reactant_1/2/3 as uchar (species idx < SIZE = 150).
+    // exp14: pack f_plus_max / f_minus_max as ushort.
+    // exp15: pack f_plus_map / f_minus_map as ushort. Values are reaction
+    //        indices in [0, NUM_REACTIONS=1604) so ushort suffices.
+
+    // Stage block-shared metadata into LDS once per block.
+    for (int r = tid; r < NUM_REACTIONS; r += blockDim.x) {
+        nrs_lds[r] = (unsigned char)num_react_species[r];
+        r1_lds[r]  = (unsigned char)reactant_1[r];
+        r2_lds[r]  = (unsigned char)reactant_2[r];
+        r3_lds[r]  = (unsigned char)reactant_3[r];
+    }
+    for (int i = tid; i < SIZE + 1; i += blockDim.x) {
+        fp_max_lds[i] = (short)f_plus_max[i];
+        fm_max_lds[i] = (short)f_minus_max[i];
+    }
+    for (int j = tid; j < NUM_FLUXES_PLUS; j += blockDim.x)
+        fp_map_lds[j] = (unsigned short)f_plus_map[j];
+    for (int j = tid; j < NUM_FLUXES_MINUS; j += blockDim.x)
+        fm_map_lds[j] = (unsigned short)f_minus_map[j];
+    // exp19: stage stoichiometric factors as uchar.
+    for (int j = tid; j < NUM_FLUXES_PLUS; j += blockDim.x)
+        fp_fac_lds[j] = (unsigned char)f_plus_factor[j];
+    for (int j = tid; j < NUM_FLUXES_MINUS; j += blockDim.x)
+        fm_fac_lds[j] = (unsigned char)f_minus_factor[j];
+    // exp16: aa[SIZE] is read in initial-norm, energy-reduce and final-norm
+    //        - dozens of times per zone per timestep. Tiny LDS cost (1.2KB).
+    for (int i = tid; i < SIZE; i += blockDim.x)
+        aa_lds[i] = aa[i];
+    __syncthreads();
+
     for (int zone = blockIdx.x; zone < Nzones; zone += gridDim.x){ 
 
-        double* rate = rate_g + zone * NUM_REACTIONS;
-    
         double T   = temp[zone];
         double rho = dens[zone];
         double tstep = real_vals[0];
     
-        double* aa_zone = aa;
+        double* aa_zone = aa_lds;  // exp16: redirect to LDS copy
     
         // Per-zone offsets
-        double* xout_zone = xout + zone * SIZE;
+        // Experiment 09: xout_zone now lives in LDS for the duration of the
+        // per-zone work (writeback to global at end of the zone loop body).
+        double* xout_zone = xout_lds;
         double* xin_zone  = xin  + zone * SIZE;
-    
-        // ------------------------------------------------------------
-        // Shared memory
-        // ------------------------------------------------------------
-        extern __shared__ double smem[];
-    
-        double* flux       = smem;                        // NUM_REACTIONS
-        double* reduce_buf = flux + NUM_REACTIONS;	      // blockDim.x
     
         __shared__ double norm_sum;
         double t, dt, t_end;
@@ -104,7 +159,11 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         // Thermodynamic precompute
         // ------------------------------------------------------------
         double tmp = T * 1e-9;
-        double t93 = pow(tmp, THIRD);
+        // Experiment 01: pow(tmp, 1/3) -> cbrt(tmp)
+        // pow() is inlined as exp(y*log(x)) with NaN/sign/integer-y special cases
+        // (~335 lines of gfx90a asm at baseline). cbrt() is a dedicated intrinsic
+        // with a much shorter sequence, reducing VGPR/SGPR pressure.
+        double t93 = cbrt(tmp);
     
         double t1 = 1.0 / (tmp);
         double t2 = 1.0 / t93;
@@ -161,26 +220,22 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     	        printf("ZONE %d: Reaction %d RATE is NaN\n", blockIdx.x, r);
     	    }
     	    double f = f_rate;
-    	    if (num_react_species[r] > 0) {
-    	        int idx1 = reactant_1[r];
+    	    int nrs = (int)nrs_lds[r];
+    	    if (nrs > 0) {
+    	        int idx1 = (int)r1_lds[r];
     	        double abund1 = xout_zone[idx1];
     	        f *= abund1;
     	    }
-    	   // if (num_react_species[r] > 0) f *= xout_zone[reactant_1[r]];
-                if (num_react_species[r] > 1) {
-                    int idx2 = reactant_2[r];
+                if (nrs > 1) {
+                    int idx2 = (int)r2_lds[r];
                     double abund2 = xout_zone[idx2];
                     f *= abund2;
                 }
-    
-    	   // if (num_react_species[r] > 1) f *= xout_zone[reactant_2[r]];
-                if (num_react_species[r] > 2) {
-                    int idx3 = reactant_3[r];
+                if (nrs > 2) {
+                    int idx3 = (int)r3_lds[r];
                     double abund3 = xout_zone[idx3];
                     f *= abund3;
                 }
-    
-    	   // if (num_react_species[r] > 2) f *= xout_zone[reactant_3[r]];
                 flux[r] = f;
             }
     
@@ -190,32 +245,34 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
             // Species updates
             // --------------------------------------------------------
             for (int i = tid; i < SIZE; i += blockDim.x) {
-                // f_*_max has a sentinel at [0] (= -1) and the old "upper
-                // bound for species i" now lives at [i + 1]; this removes the
-                // (i == 0) conditional that was previously needed.
-                int p0 = f_plus_max[i] + 1;
-                int m0 = f_minus_max[i] + 1;
+                // f_*_max carries a sentinel (-1) at [0] with real bounds at
+                // [i + 1], which removes the (i == 0) branch. Combined with the
+                // LDS-resident copies of f_*_max / f_*_map / f_*_factor.
+                int p0 = (int)fp_max_lds[i] + 1;
+                int m0 = (int)fm_max_lds[i] + 1;
+                int p1 = (int)fp_max_lds[i + 1];
+                int m1 = (int)fm_max_lds[i + 1];
                 double plus  = 0.0;
-	        double minus = 0.0;
+                double minus = 0.0;
 
-                for (int j = p0; j <= f_plus_max[i + 1]; ++j)         //this could be source of divergence
-	            plus += f_plus_factor[j] * flux[f_plus_map[j]];
-	        for (int j = m0; j <= f_minus_max[i + 1]; ++j)        // ''
-		    minus += f_minus_factor[j] * flux[f_minus_map[j]];
+                for (int j = p0; j <= p1; ++j)
+                    plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+                for (int j = m0; j <= m1; ++j)
+                    minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
     
     
-                if (minus * dt > xout_zone[i]) {
-    		// Asympotic estimate.
-                    xout_zone[i] =
-                        (xout_zone[i] + plus * dt) /
-                        (1.0 + (minus / (xout_zone[i] + ZERO_FIX)) * dt);
+                // exp17: load xout_zone[i] once, work in a register, write
+                // once. Replaces 5 LDS loads + 1-2 LDS stores with 1 of each.
+                double x_i = xout_zone[i];
+                if (minus * dt > x_i) {
+                    x_i = (x_i + plus * dt) /
+                          (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
                 } else {
-    		// Forward Euler update.
-                    xout_zone[i] += (plus - minus) * dt;
+                    x_i += (plus - minus) * dt;
                 }
-                // NEW: clamp
-                if (xout_zone[i] < ZERO_FIX)
-                    xout_zone[i] = ZERO_FIX;
+                if (x_i < ZERO_FIX)
+                    x_i = ZERO_FIX;
+                xout_zone[i] = x_i;
             }
             __syncthreads();
     
@@ -245,16 +302,17 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
 
         int lane   = tid & 63;
         int waveId = tid >> 6;
+        const int num_waves = blockDim.x >> 6;
 
         if (lane == 0)
             reduce_buf[waveId] = local;
 
         __syncthreads();
 
-        // Cross-wave reduction: wave 0 reduces the 4 partial sums
-        if (tid < 4) {
+        // Cross-wave reduction: wave 0 reduces the num_waves partial sums
+        if (tid < num_waves) {
             local = reduce_buf[tid];
-            for (int offset = 2; offset > 0; offset >>= 1)
+            for (int offset = num_waves >> 1; offset > 0; offset >>= 1)
                 local += __shfl_down(local, offset, 64);
         }
 
@@ -287,9 +345,9 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
 
         __syncthreads();
 
-        if (tid < 4) {
+        if (tid < num_waves) {
             e_local = reduce_buf[tid];
-            for (int offset = 2; offset > 0; offset >>= 1)
+            for (int offset = num_waves >> 1; offset > 0; offset >>= 1)
                 e_local += __shfl_down(e_local, offset, 64);
         }
 
@@ -297,5 +355,12 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
             sdotrate[zone] = e_local * tstep * 9.5768e17;
 
          __syncthreads();
+
+        // Experiment 09: copy LDS xout_lds back to global xout for the host.
+        double* xout_global = xout + zone * SIZE;
+        for (int i = tid; i < SIZE; i += blockDim.x)
+            xout_global[i] = xout_lds[i];
+
+        __syncthreads();
     }
 }
