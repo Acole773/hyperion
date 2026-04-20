@@ -135,18 +135,17 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
             // integration. ESPECIALY since it's the biggest time-cost. If
             // we do that, it may be possible to build a very optimized
             // routine for it.
-            int min_plus = 0;
-            int min_minus = 0;
-            if (i > 0) {
-                min_plus = f_plus_max[i - 1] + 1;
-                min_minus = f_minus_max[i - 1] + 1;
-            }
+            // f_*_max uses a leading sentinel ([0] = -1); the "upper bound
+            // for species i" now lives at [i + 1], and the (i == 0) guard
+            // that used to wrap the lower bound is gone.
+            int min_plus = f_plus_max[i] + 1;
+            int min_minus = f_minus_max[i] + 1;
             f_plus_sum[i] = 0.0;
-            for (int j = min_plus; j <= f_plus_max[i]; j++) {
+            for (int j = min_plus; j <= f_plus_max[i + 1]; j++) {
                 f_plus_sum[i] += f_plus[j];
             }
             f_minus_sum[i] = 0.0;
-            for (int j = min_minus; j <= f_minus_max[i]; j++) {
+            for (int j = min_minus; j <= f_minus_max[i + 1]; j++) {
                 f_minus_sum[i] += f_minus[j];
             }
         }

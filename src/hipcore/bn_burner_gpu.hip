@@ -190,15 +190,18 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
             // Species updates
             // --------------------------------------------------------
             for (int i = tid; i < SIZE; i += blockDim.x) {
-                int p0 = (i == 0) ? 0 : f_plus_max[i - 1] + 1;
-                int m0 = (i == 0) ? 0 : f_minus_max[i - 1] + 1;
+                // f_*_max has a sentinel at [0] (= -1) and the old "upper
+                // bound for species i" now lives at [i + 1]; this removes the
+                // (i == 0) conditional that was previously needed.
+                int p0 = f_plus_max[i] + 1;
+                int m0 = f_minus_max[i] + 1;
                 double plus  = 0.0;
-    	        double minus = 0.0;
-    
-                for (int j = p0; j <= f_plus_max[i]; ++j)             //this could be source of divergence
-    	            plus += f_plus_factor[j] * flux[f_plus_map[j]];
-    	        for (int j = m0; j <= f_minus_max[i]; ++j)		  // ''
-    		    minus += f_minus_factor[j] * flux[f_minus_map[j]];
+	        double minus = 0.0;
+
+                for (int j = p0; j <= f_plus_max[i + 1]; ++j)         //this could be source of divergence
+	            plus += f_plus_factor[j] * flux[f_plus_map[j]];
+	        for (int j = m0; j <= f_minus_max[i + 1]; ++j)        // ''
+		    minus += f_minus_factor[j] * flux[f_minus_map[j]];
     
     
                 if (minus * dt > xout_zone[i]) {

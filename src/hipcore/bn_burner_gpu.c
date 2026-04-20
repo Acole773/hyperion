@@ -87,8 +87,8 @@ int device_init(int zones) {
     HIP_ALLOC_COPY(args.f_minus_map, f_minus_map, f_minus_total);
     HIP_ALLOC_COPY(args.f_plus_factor, f_plus_factor, f_plus_total);
     HIP_ALLOC_COPY(args.f_minus_factor, f_minus_factor, f_minus_total);
-    HIP_ALLOC_COPY(args.f_plus_max, f_plus_max, num_species);
-    HIP_ALLOC_COPY(args.f_minus_max, f_minus_max, num_species);
+    HIP_ALLOC_COPY(args.f_plus_max, f_plus_max, num_species + 1);
+    HIP_ALLOC_COPY(args.f_minus_max, f_minus_max, num_species + 1);
     HIP_ALLOC_COPY(args.num_react_species, num_react_species, num_reactions);
 
     // Per-zone allocations
