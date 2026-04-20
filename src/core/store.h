@@ -30,6 +30,7 @@ extern int* is_reverse;
 extern int* HYP_RESTRICT reactant_1;
 extern int* HYP_RESTRICT reactant_2;
 extern int* HYP_RESTRICT reactant_3;
+extern double* HYP_RESTRICT reactant_filter;
 
 extern double* HYP_RESTRICT rate;
 extern double* HYP_RESTRICT flux;

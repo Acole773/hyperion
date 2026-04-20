@@ -18,6 +18,7 @@
 #define NUM_REACTIONS 48
 #define NUM_FLUXES_PLUS 72
 #define NUM_FLUXES_MINUS 72
+#define THREADS_PER_BLOCK 64
 #endif
 
 #if SIZE == 150
@@ -25,6 +26,7 @@
 #define NUM_REACTIONS 1604
 #define NUM_FLUXES_PLUS 2710
 #define NUM_FLUXES_MINUS 2704
+#define THREADS_PER_BLOCK 192
 #endif
 
 #if SIZE == 365
@@ -32,6 +34,7 @@
 // #define NUM_REACTIONS 4395
 // #define NUM_FLUXES_PLUS 7429
 // #define NUM_FLUXES_MINUS 7420
+// #define THREADS_PER_BLOCK 256
 #endif
 
 // Global args structure for HIP device memory
@@ -83,6 +86,7 @@ int device_init(int zones) {
     HIP_ALLOC_COPY(args.reactant_1, reactant_1, num_reactions);
     HIP_ALLOC_COPY(args.reactant_2, reactant_2, num_reactions);
     HIP_ALLOC_COPY(args.reactant_3, reactant_3, num_reactions);
+    HIP_ALLOC_COPY(args.reactant_filter, reactant_filter, num_reactions*3);
     HIP_ALLOC_COPY(args.f_plus_map, f_plus_map, f_plus_total);
     HIP_ALLOC_COPY(args.f_minus_map, f_minus_map, f_minus_total);
     HIP_ALLOC_COPY(args.f_plus_factor, f_plus_factor, f_plus_total);
@@ -140,7 +144,8 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     );
 
     // Kernel launch parameters
-    dim3 blockdim(256, 1, 1);
+    //dim3 blockdim(256, 1, 1);
+    dim3 blockdim(THREADS_PER_BLOCK, 1, 1);
     dim3 griddim(zones, 1, 1);
     size_t sharedmem_allocation =
 	sizeof(double) * (NUM_REACTIONS + blockdim.x); 
@@ -149,7 +154,7 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
 	args.temp, args.dens, args.xin, args.xout, args.sdotrate,
 	args.prefactor, args.p_0, args.p_1, args.p_2, args.p_3,
 	args.p_4, args.p_5, args.p_6, args.aa, args.q_value,
-	args.reactant_1, args.reactant_2, args.reactant_3,
+	args.reactant_1, args.reactant_2, args.reactant_3, args.reactant_filter,
 	args.f_plus_map, args.f_minus_map, args.f_plus_factor,
 	args.f_minus_factor, args.f_plus_max, args.f_minus_max,
 	args.num_react_species, args.real_vals, d_rate
@@ -189,6 +194,7 @@ void hip_killall_device_ptrs() {
     HIP_FREE(args.reactant_1)
     HIP_FREE(args.reactant_2)
     HIP_FREE(args.reactant_3)
+    HIP_FREE(args.reactant_filter)
     HIP_FREE(args.f_plus_map)
     HIP_FREE(args.f_minus_map)
     HIP_FREE(args.f_plus_factor)

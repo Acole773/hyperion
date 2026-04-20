@@ -19,6 +19,8 @@ int* HYP_RESTRICT reactant_1;
 int* HYP_RESTRICT reactant_2;
 int* HYP_RESTRICT reactant_3;
 
+double* HYP_RESTRICT reactant_filter;
+
 double* HYP_RESTRICT rate;
 double* HYP_RESTRICT flux;
 double* q_value;

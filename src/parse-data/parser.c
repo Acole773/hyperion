@@ -45,8 +45,14 @@ void rate_library_create(char* filename, int size) {
     reactant_1 = malloc(size * sizeof(int));
     reactant_2 = malloc(size * sizeof(int));
     reactant_3 = malloc(size * sizeof(int));
+    reactant_filter = malloc(size * 3 * sizeof(double));
     reactant_idx = malloc(size * sizeof(int*));
     product_idx = malloc(size * sizeof(int*));
+
+    if (!reactant_1 || !reactant_2 || !reactant_3 || !reactant_filter) {
+      fprintf(stderr, "allocation failed\n");
+      exit(1);
+    }
 
     char line[120];
     char reaction_token[LABELSIZE];
@@ -154,10 +160,18 @@ void rate_library_create(char* filename, int size) {
     }
     num_reactions = n + 1;
 
+    const int dummy_idx = 0;
+
     for (int i = 0; i < num_reactions; i++) {
+        int nrs = num_react_species[i];
+
         reactant_1[i] = reactant_idx[i][0];
-        reactant_2[i] = reactant_idx[i][1];
-        reactant_3[i] = reactant_idx[i][2];
+        reactant_2[i] = (nrs > 1) ? reactant_idx[i][1] : dummy_idx;
+        reactant_3[i] = (nrs > 2) ? reactant_idx[i][2] : dummy_idx;
+
+        reactant_filter[3*i + 0] = 1.0;
+        reactant_filter[3*i + 1] = (nrs > 1) ? 1.0 : 0.0;
+        reactant_filter[3*i + 2] = (nrs > 2) ? 1.0 : 0.0;
     }
 
     fclose(file);
