@@ -189,18 +189,15 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
         }
 
         for (int i = 0; i < SIZE; i++) {
-            int min_plus = 0;
-            int min_minus = 0;
-            if (i > 0) {
-                min_plus = f_plus_max[i - 1] + 1;
-                min_minus = f_minus_max[i - 1] + 1;
-            }
+            // f_*_max uses a leading sentinel ([0] = -1); no (i == 0) guard.
+            int min_plus = f_plus_max[i] + 1;
+            int min_minus = f_minus_max[i] + 1;
             _f_plus_sum[i] = _mm512_setzero_pd();
-            for (int j = min_plus; j <= f_plus_max[i]; j++) {
+            for (int j = min_plus; j <= f_plus_max[i + 1]; j++) {
                 _f_plus_sum[i] = _mm512_add_pd(_f_plus_sum[i], _f_plus[j]);
             }
             _f_minus_sum[i] = _mm512_setzero_pd();
-            for (int j = min_minus; j <= f_minus_max[i]; j++) {
+            for (int j = min_minus; j <= f_minus_max[i + 1]; j++) {
                 _f_minus_sum[i] = _mm512_add_pd(_f_minus_sum[i], _f_minus[j]);
             }
         }

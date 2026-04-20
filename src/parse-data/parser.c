@@ -346,10 +346,14 @@ void data_init(void) {
     // related, and likewise f_minus_max and f_minus_min are related, we will
     // only need to pass f_plus_max and f_minus_max to the kernel.
 
-    f_plus_max = malloc(sizeof(int) * num_species);
-    f_plus_min = malloc(sizeof(int) * num_species);
-    f_minus_max = malloc(sizeof(int) * num_species);
-    f_minus_min = malloc(sizeof(int) * num_species);
+    // f_*_max and f_*_min both carry an extra leading sentinel element
+    // (f_*_max[0] = -1, f_*_min[0] = 0) so that callers can address the
+    // bounds for species i uniformly as f_*_max[i + 1] / f_*_min[i + 1]
+    // without an (i == 0) special case. Array length is num_species + 1.
+    f_plus_max = malloc(sizeof(int) * (num_species + 1));
+    f_plus_min = malloc(sizeof(int) * (num_species + 1));
+    f_minus_max = malloc(sizeof(int) * (num_species + 1));
+    f_minus_min = malloc(sizeof(int) * (num_species + 1));
 
     // Create 1D arrays that will be used to map finite F+ and F- to the Flux
     // array.
@@ -395,19 +399,21 @@ void data_init(void) {
         f_minus_map[i] = temp_int2[i];
     }
 
-    // Populate the f_plus_min and f_plus_max arrays
+    // Populate the f_plus_min and f_plus_max arrays.
+    // f_plus_max[0] = -1 and f_plus_min[0] = 0 are sentinels; the bounds
+    // for species i live at f_plus_max[i + 1] and f_plus_min[i + 1].
+    f_plus_max[0] = -1;
     f_plus_min[0] = 0;
-    f_plus_max[0] = f_plus_num[0] - 1;
-    for (int i = 1; i < num_species; i++) {
-        f_plus_min[i] = f_plus_max[i - 1] + 1;
-        f_plus_max[i] = f_plus_min[i] + f_plus_num[i] - 1;
+    for (int i = 0; i < num_species; i++) {
+        f_plus_min[i + 1] = f_plus_max[i] + 1;
+        f_plus_max[i + 1] = f_plus_min[i + 1] + f_plus_num[i] - 1;
     }
-    // Populate the f_minus_min and f_minus_max arrays
+    // Populate the f_minus_min and f_minus_max arrays (same sentinel scheme).
+    f_minus_max[0] = -1;
     f_minus_min[0] = 0;
-    f_minus_max[0] = f_minus_num[0] - 1;
-    for (int i = 1; i < num_species; i++) {
-        f_minus_min[i] = f_minus_max[i - 1] + 1;
-        f_minus_max[i] = f_minus_min[i] + f_minus_num[i] - 1;
+    for (int i = 0; i < num_species; i++) {
+        f_minus_min[i + 1] = f_minus_max[i] + 1;
+        f_minus_max[i + 1] = f_minus_min[i + 1] + f_minus_num[i] - 1;
     }
 
     // Populate the f_plus_factor and f_minus_factor arrays that
