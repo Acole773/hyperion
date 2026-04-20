@@ -90,8 +90,12 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     unsigned short* fm_max_lds = fp_max_lds + SIZE;                         // SIZE
     unsigned short* fp_map_lds = fm_max_lds + SIZE;                         // NUM_FLUXES_PLUS
     unsigned short* fm_map_lds = fp_map_lds + NUM_FLUXES_PLUS;              // NUM_FLUXES_MINUS
+    // exp19: pack f_plus_factor / f_minus_factor as uchar (small integer
+    // stoichiometric coefficients; uchar->double conversion is exact).
+    unsigned char* fp_fac_lds = (unsigned char*)(fm_map_lds + NUM_FLUXES_MINUS); // NUM_FLUXES_PLUS bytes
+    unsigned char* fm_fac_lds = fp_fac_lds + NUM_FLUXES_PLUS;                    // NUM_FLUXES_MINUS bytes
     // Pad to 8-byte alignment for the double aa_lds that follows.
-    double* aa_lds = (double*)(((uintptr_t)(fm_map_lds + NUM_FLUXES_MINUS) + 7) & ~(uintptr_t)7);  // SIZE doubles
+    double* aa_lds = (double*)(((uintptr_t)(fm_fac_lds + NUM_FLUXES_MINUS) + 7) & ~(uintptr_t)7);  // SIZE doubles
     // exp11/12/13: pack reactant_1/2/3 as uchar (species idx < SIZE = 150).
     // exp14: pack f_plus_max / f_minus_max as ushort.
     // exp15: pack f_plus_map / f_minus_map as ushort. Values are reaction
@@ -112,6 +116,11 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         fp_map_lds[j] = (unsigned short)f_plus_map[j];
     for (int j = tid; j < NUM_FLUXES_MINUS; j += blockDim.x)
         fm_map_lds[j] = (unsigned short)f_minus_map[j];
+    // exp19: stage stoichiometric factors as uchar.
+    for (int j = tid; j < NUM_FLUXES_PLUS; j += blockDim.x)
+        fp_fac_lds[j] = (unsigned char)f_plus_factor[j];
+    for (int j = tid; j < NUM_FLUXES_MINUS; j += blockDim.x)
+        fm_fac_lds[j] = (unsigned char)f_minus_factor[j];
     // exp16: aa[SIZE] is read in initial-norm, energy-reduce and final-norm
     //        - dozens of times per zone per timestep. Tiny LDS cost (1.2KB).
     for (int i = tid; i < SIZE; i += blockDim.x)
@@ -240,24 +249,24 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
                 double plus  = 0.0;
     	        double minus = 0.0;
     
-                for (int j = p0; j <= p1; ++j)
-    	            plus += f_plus_factor[j] * flux[(int)fp_map_lds[j]];
-    	        for (int j = m0; j <= m1; ++j)
-    		    minus += f_minus_factor[j] * flux[(int)fm_map_lds[j]];
+            for (int j = p0; j <= p1; ++j)
+	            plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+	        for (int j = m0; j <= m1; ++j)
+		    minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
     
     
-                if (minus * dt > xout_zone[i]) {
-    		// Asympotic estimate.
-                    xout_zone[i] =
-                        (xout_zone[i] + plus * dt) /
-                        (1.0 + (minus / (xout_zone[i] + ZERO_FIX)) * dt);
+                // exp17: load xout_zone[i] once, work in a register, write
+                // once. Replaces 5 LDS loads + 1-2 LDS stores with 1 of each.
+                double x_i = xout_zone[i];
+                if (minus * dt > x_i) {
+                    x_i = (x_i + plus * dt) /
+                          (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
                 } else {
-    		// Forward Euler update.
-                    xout_zone[i] += (plus - minus) * dt;
+                    x_i += (plus - minus) * dt;
                 }
-                // NEW: clamp
-                if (xout_zone[i] < ZERO_FIX)
-                    xout_zone[i] = ZERO_FIX;
+                if (x_i < ZERO_FIX)
+                    x_i = ZERO_FIX;
+                xout_zone[i] = x_i;
             }
             __syncthreads();
     

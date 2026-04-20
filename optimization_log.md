@@ -340,6 +340,64 @@ Per-node: C55 45.941, C56 46.167, C57 45.930.
 
 ---
 
+### Experiment 19 — **Promote `f_plus_factor[]` and `f_minus_factor[]` (uchar) to LDS** ✅✅✅ LARGEST WIN
+
+**Hypothesis**: After exp15 packed `f_*_map` into LDS, the j-loops in the species-update phase still issue one global double load per iteration for `f_plus_factor[j]` / `f_minus_factor[j]`. Each per-zone integration runs ~1000 timesteps, and each timestep walks the entire flux-factor arrays (NUM_FLUXES_PLUS=2710 + NUM_FLUXES_MINUS=2704 ≈ 5414 doubles ≈ 43 KB total) — well above the per-CU L1 (~16 KB) and L2 budget shared with the rate prologue. That implies ~564 M global double loads per run just for those two arrays, and these are the ONLY remaining inputs in the j-loops still served from global memory. Critically, the values are stoichiometric coefficients (the `(double)reaction_mask[i][j]` cast in `parser.c:423`), all small non-negative integers (typically 1, 2, 3) — `(double)uchar` round-trips exactly in IEEE-754, so packing them as `unsigned char` is bit-preserving.
+
+**Change**:
+
+- Kernel: added `unsigned char* fp_fac_lds`, `unsigned char* fm_fac_lds` to the LDS layout (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS = 5414 bytes ≈ 5.3 KB), staged from global once per block, and rewrote the j-loop multiplications as `(double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]]` (and the symmetric minus form).
+- Launcher: added `(NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned char)` to `sharedmem_allocation`.
+
+**Assembly metrics**:
+
+| Metric    | exp17 |  exp19 |   Δ  |
+| --------- | ----: | -----: | ---: |
+| VGPRs     |   110 |    125 |  +15 |
+| SGPRs     |   100 |    100 |    0 |
+| Occupancy |     4 |      4 |    0 |
+
+VGPR went **up** by 15 (likely extra base pointers / cast-and-extend code held live across the j-loops), but occupancy is unchanged at 4 waves/EU because we are still well above the 96-VGPR cliff.
+
+**LDS budget**: ~51 KB/block (well within 64 KB/CU).
+
+**Timing (6-run avg across nodes C55–C57, C59–C61)**:
+
+| metric       |     exp17 |     exp19 |       Δ |
+| ------------ | --------: | --------: | ------: |
+| avg_gpu_time | 42.567 s  | **26.528 s** | **−37.7 %** vs exp17 |
+| vs baseline  |           |           | **−43.2 %** cumulative |
+
+Per-node (1 sample each): C55 26.535, C56 26.546, C57 26.488, C59 26.505, C60 26.586, C61 26.511 — extremely tight (σ ≈ 0.034 s).
+
+**Correctness**: full output diff against baseline shows only the 8 expected timing/cycle-count lines differ; every `xout` and `sdot` line is **bit-identical**.
+
+**Why it works (this is the dominant memory bottleneck)**:
+
+The j-loop is the inner-most hot path of the entire kernel. After exp15 it looked like:
+
+```
+for (int j = p0; j <= p1; ++j)
+    plus += f_plus_factor[j] * flux[(int)fp_map_lds[j]];
+```
+
+with two LDS reads (`fp_map_lds[j]`, `flux[idx]`) and one global double read (`f_plus_factor[j]`). Order-of-magnitude estimate of global-memory pressure for that one line:
+
+- 104 zones × ~1000 timesteps × 2710 j-iters ≈ 282 M doubles read for `f_plus_factor` alone (×8 B = 2.25 GB), plus the symmetric ~280 M for `f_minus_factor` → ~4.5 GB of global traffic per outer iteration.
+- The `f_*_factor` arrays together are 43 KB — too large for L1 (~16 KB), forcing repeated L2 (and partial HBM) refills for every species-i pass.
+
+Moving them into 5.3 KB of LDS:
+
+1. Eliminates ~4.5 GB of HBM/L2 read traffic per outer iteration outright.
+2. Removes the `s_waitcnt vmcnt(0)` stalls that previously bracketed each j-iteration's global load (the j-loop is now a pure LDS pipeline of three LDS reads and an FMA).
+3. Frees L2 bandwidth and capacity for the still-global rate-prologue loads (`prefactor[]`, `p_0..6[]`), which run once per zone and don't benefit from LDS-residency at this LDS budget.
+
+The fact that VGPR went up 110 → 125 with no occupancy change *and a 38 % runtime drop* is a textbook indicator that this kernel was completely memory-latency-bound on these two arrays — not VGPR-bound, not occupancy-bound, not compute-bound.
+
+**Decision**: **KEPT**. Failure counter reset 3 → 0.
+
+---
+
 ## Summary table (running)
 
 | #  | Description                              | Avg GPU time (1 iter, 104 zones) |  Δ vs baseline | VGPR | SGPR | Scratch | Occ | Decision |
@@ -361,10 +419,13 @@ Per-node: C55 45.941, C56 46.167, C57 45.930.
 | 14 | **`f_plus_max` / `f_minus_max` (ushort) → LDS + hoist bound** ✅ |          44.733  s (3-run avg)   |       **−0.33 %**, −4.17 % cumulative |  110 |  100 |       0 |   4 | **KEPT** |
 | 15 | **`f_plus_map` / `f_minus_map` (ushort) → LDS** ✅✅ |          42.652  s (3-run avg)   |       **−4.65 % vs exp14**, **−8.63 % cumulative** |  110 |  100 |       0 |   4 | **KEPT** — biggest single win |
 | 16 | `aa[SIZE]` → LDS                          |          42.636  s (3-run avg)   |       −0.04 % (within noise) |  110 |  100 |       0 |   4 | kept (cleanup; counted as unsuccessful 1/10 since reset) |
+| 17 | cache `xout_zone[i]` in register in species update | 42.567 s (6-run avg)     |       −0.16 % vs exp16 (within noise) |  110 |  100 |   0 |   4 | kept (cleanup; counted as unsuccessful 2/10) |
+| 18 | `q_value[]` → LDS (double)                |          42.517  s (6-run avg)   |       −0.12 % vs exp17 (within noise) |  123 |  100 |       0 |   4 | **reverted** — VGPRs jumped 110→123 with no benefit (unsuccessful 3/10) |
+| 19 | **`f_plus_factor` / `f_minus_factor` (uchar) → LDS** ✅✅✅ | **26.528 s (6-run avg)** | **−37.7 % vs exp17, −43.2 % cumulative** | 125 | 100 | 0 | 4 | **KEPT** — biggest single win by far |
 
 ## Failure counter
 
-Consecutive unsuccessful experiments: **0 / 10** (reset after exp09 success)
+Consecutive unsuccessful experiments: **0 / 10** (reset after exp19 success)
 
 Failure log (so far):
 
@@ -384,6 +445,9 @@ Failure log (so far):
 - **exp14: f_plus_max / f_minus_max (ushort) → LDS + hoist bound — −0.33 %, −4.17 % cumulative.**
 - **exp15: f_plus_map / f_minus_map (ushort) → LDS — −4.65 % vs exp14, −8.63 % cumulative. Largest single win.**
 - exp16: aa[] → LDS — within noise (−0.04 %). Kept for cleanliness; counted as _unsuccessful 1/10_ since the post-exp15 reset.
+- exp17: cache `xout_zone[i]` in register — within noise (−0.16 %). Kept for clarity; _unsuccessful 2/10._
+- exp18: `q_value[]` → LDS — within noise (−0.12 %); VGPRs jumped 110→123. **Reverted.** _unsuccessful 3/10._
+- **exp19: `f_plus_factor` / `f_minus_factor` (uchar) → LDS — −37.7 % vs exp17, −43.2 % cumulative. Largest single win in the entire study. Counter reset.**
 
 ### Pattern so far
 

@@ -152,10 +152,13 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     // Experiment 14: +2*SIZE ushort for f_plus_max / f_minus_max LDS.
     // Experiment 15: +NUM_FLUXES_{PLUS,MINUS} ushort for f_plus_map/f_minus_map LDS.
     // Experiment 16: +SIZE doubles for aa LDS (+ 8 bytes alignment slack).
+    // Experiment 19: +(NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) uchar for
+    //                f_plus_factor / f_minus_factor LDS.
     size_t sharedmem_allocation =
 	sizeof(double) * (NUM_REACTIONS + num_waves + NUM_REACTIONS + SIZE)
         + 4 * NUM_REACTIONS * sizeof(unsigned char)
         + (2 * SIZE + NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned short)
+        + (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned char)
         + SIZE * sizeof(double) + 8;
 
     hyperion_burner_dev_kernel<<<griddim, blockdim, sharedmem_allocation>>>(
