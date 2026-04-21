@@ -61,9 +61,7 @@
 #endif
 
 
-#define SMALL_POW(x, n) ({ \
-    double _x = (double)(x); \
-    int _n = (int)(n); \
+#define SMALL_POW(_x, _n) ({ \
     (_n == 2) ? (_x * _x) : \
     (_n == 1) ? (_x) : \
     (1.0); \
@@ -140,9 +138,9 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
 
     double* rate = rate_g + zone * NUM_REACTIONS;
 
-    //double T   = temp[zone];
-    double rho = dens[zone];
-    double tstep = real_vals[0];
+    const double T   = temp[zone];
+    const double rho = dens[zone];
+    const double tstep = real_vals[0];
 
     double* aa_zone = aa;
 
@@ -172,8 +170,8 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     // ------------------------------------------------------------
     // Thermodynamic precompute
     // ------------------------------------------------------------
-    const double tmp = temp[zone] * 1e-9;
-    const double t93 = pow(tmp, THIRD);
+    const double tmp = T * 1e-9;
+    const double t93 = cbrt(T) * 1e-3; //pow(tmp, THIRD);
 
     // ------------------------------------------------------------
     // Rate evaluation
@@ -208,27 +206,25 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         // --------------------------------------------------------
         // Flux computation
         // --------------------------------------------------------
-
         for (int r = tid; r < NUM_REACTIONS; r += blockDim.x) {
-            int idx1 = reactant_1[r];
-            int idx2 = reactant_2[r];
-            int idx3 = reactant_3[r];
+            const int idx1 = reactant_1[r];
+            const int idx2 = reactant_2[r];
+            const int idx3 = reactant_3[r];
 
-            double a1 = xout_zone[idx1];
-            double a2 = xout_zone[idx2];
-            double a3 = xout_zone[idx3];
+            const double a1 = xout_zone[idx1];
+            const double a2 = xout_zone[idx2];
+            const double a3 = xout_zone[idx3];
 
-            double f1 = RF(r,0);
-            double f2 = RF(r,1);
-            double f3 = RF(r,2);
+            const double f1 = RF(r,0);
+            const double f2 = RF(r,1);
+            const double f3 = RF(r,2);
 
-            double term1 = f1 * a1 + (1.0 - f1);
-            double term2 = f2 * a2 + (1.0 - f2);
-            double term3 = f3 * a3 + (1.0 - f3);
+            const double term1 = f1 * a1 + (1.0 - f1);
+            const double term2 = f2 * a2 + (1.0 - f2);
+            const double term3 = f3 * a3 + (1.0 - f3);
 
             flux[r] = rate[r] * term1 * term2 * term3;
         }
-
         __syncthreads();
 
         // --------------------------------------------------------
@@ -236,8 +232,8 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         // --------------------------------------------------------
 
         for (int i = tid; i < SIZE; i += blockDim.x) {
-            int p0 = (i == 0) ? 0 : f_plus_max[i - 1] + 1;
-            int m0 = (i == 0) ? 0 : f_minus_max[i - 1] + 1;
+            const int p0 = (i == 0) ? 0 : f_plus_max[i - 1] + 1;
+            const int m0 = (i == 0) ? 0 : f_minus_max[i - 1] + 1;
             double plus  = 0.0;
             double minus = 0.0;
 
@@ -247,10 +243,10 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
                 minus += f_minus_factor[j] * flux[f_minus_map[j]];
 
             double x = xout_zone[i];
-            double asym =
+            const double asym =
               (x + plus * dt) /
               (1.0 + (minus / (x + ZERO_FIX)) * dt);
-            double euler = x + (plus - minus) * dt;
+            const double euler = x + (plus - minus) * dt;
             x = (minus * dt > x) ? asym : euler;
             x = (x < ZERO_FIX) ? ZERO_FIX : x;
             xout_zone[i] = x;
@@ -275,7 +271,7 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     for (int i = tid; i < SIZE; i += blockDim.x)
         local += xout_zone[i] * aa_zone[i];
 
-    double sum = block_reduce_sum(local, reduce_buf);
+    const double sum = block_reduce_sum(local, reduce_buf);
 
     if (tid == 0)
         norm_sum = 1.0 / sum;
@@ -294,7 +290,7 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     for (int r = tid; r < NUM_REACTIONS; r += blockDim.x)
         e_local += flux[r] * q_value[r];
 
-    double e_sum = block_reduce_sum(e_local, reduce_buf);
+    const double e_sum = block_reduce_sum(e_local, reduce_buf);
 
     if (tid == 0)
         sdotrate[zone] = e_sum * tstep * 9.5768e17;
