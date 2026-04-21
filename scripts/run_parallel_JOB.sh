@@ -8,9 +8,9 @@
 #SBATCH -n 1                          # One MPI task
 #SBATCH -c 1                          # One CPU core
 #SBATCH --gpus=1 	              # <-- You MUST request a GPU
-#SBATCH --array=0-4		      # Number of parallel JOBS
+#SBATCH --array=0-25		      # Number of parallel JOBS
 
-params=(64 128 256 512 1024)
+params=(110 120 210 220 230 320 330 340 430 440 450 540 550 560 650 660 670 760 770 780 870 880 890 980 990 1000)
 
 # =========================
 # Environment
