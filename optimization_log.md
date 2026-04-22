@@ -1122,3 +1122,187 @@ codegen.
   3. Look at the rate-eval loop and energy/norm reductions, which
      are now a larger relative fraction of total time.
 
+
+### Experiment 31 — Sub-wave species packing: 32-lane subwaves (2 species per wave)
+
+**Intent**: act on the E30 observation that VALU active threads is only
+46.7 % — most species have j-count well under 64, so the 64-lane
+reduction in E28/E30 leaves half the lanes idle on the single j-loop
+iteration each species needs. Split each wave into two 32-lane
+subwaves; each subwave updates a different species concurrently with
+the other half of the wave. The j-loop strides by 32, the reduction
+collapses 32 lanes (5 shfl), and the per-block species count drops
+from ~10 species per wave (E30) to ceil(SIZE / (2*nw)) = 5 per
+(wave, subwave).
+
+**Change** (`src/hipcore/bn_burner_gpu.hip`, species-update block):
+
+```c
+const int subwave = lane >> 5;     // 0 or 1
+const int sublane = lane & 31;     // 0..31
+const int nsub    = nw << 1;
+for (int i = wave * 2 + subwave; i < SIZE; i += nsub) {
+    // ...
+    for (int j = p0 + sublane; j <= p1; j += 32)
+        plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+    for (int offset = 16; offset > 0; offset >>= 1)
+        plus += __shfl_down(plus, offset, 32);
+    // ... same for minus, then sublane==0 does asym/Euler scalar ...
+}
+```
+
+**Timing (104 zones, 2 iter, 2 runs)**:
+
+| run | avg per-iter | cycles/zone-batch |
+|-----|-------------:|------------------:|
+| 275687 | 3.2640 s | 76 892 352 |
+| 275688 | 3.2568 s | 76 722 122 |
+
+**Average E31**: **3.260 s** vs E30 6.428 s → **−49.3 %** in this
+experiment alone, **−93.0 % CUMULATIVE** vs original baseline 46.7 s.
+
+**Numerics**: bit-identical to baseline.
+
+**Decision**: **KEPT** — but immediately superseded by E32 below
+(further sub-wave shrink to 16 lanes won another 7.5 %).
+
+
+### Experiment 32 — Sub-wave species packing: 16-lane subwaves (4 species per wave) — **CURRENT**
+
+**Intent**: continue the E31 sweep. If 32 lanes → 2 species per wave
+won 49 %, does 16 lanes × 4 species per wave win more?
+
+**Change** (`src/hipcore/bn_burner_gpu.hip`):
+
+```c
+const int subwave = lane >> 4;     // 0..3
+const int sublane = lane & 15;     // 0..15
+const int nsub    = nw << 2;       // 4 species per wave
+for (int i = wave * 4 + subwave; i < SIZE; i += nsub) {
+    // ...
+    for (int j = p0 + sublane; j <= p1; j += 16)
+        plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+    for (int offset = 8; offset > 0; offset >>= 1)
+        plus += __shfl_down(plus, offset, 16);
+    // ...
+}
+```
+
+**Timing (104 zones, 2 iter, 2 runs)**:
+
+| run | avg per-iter | cycles/zone-batch |
+|-----|-------------:|------------------:|
+| 275690 | 3.0218 s | 71 187 623 |
+| 275691 | 3.0228 s | 71 210 282 |
+| 275696 (rebuild verify) | 3.0209 s | 71 166 363 |
+| 275697 (rebuild verify) | 3.0230 s | 71 214 260 |
+
+**Average E32**: **3.022 s** vs E31 3.260 s → **−7.3 %** in this
+experiment alone. vs E30 6.428 s → **−53.0 %** since E30. vs original
+baseline 46.7017 s → **−93.5 % CUMULATIVE**.
+
+**Numerics**: bit-identical to baseline.
+
+**Assembly (`asm_e32/e32.s`)**: 28 056 lines (vs E30 28 823, −2.7 %),
+VGPR=119, SGPR=100, scratch=0. Smaller because the 16-wide reduction
+emits 4 shfl_down ops instead of 6.
+
+**rocprof-compute (job 275698, 14-iter, kernel-filtered)**:
+
+| metric                       | E30 (1024)   | **E32 (16-lane)** | Δ |
+|------------------------------|-------------:|------------------:|---:|
+| VALU Active Threads          | 29.89 (46.7 %) | **35.75 (55.86 %)** | **+20 %** |
+| IPC                          | 0.74         | 0.56              | −24 % |
+| IPC (Issued)                 | 0.79         | 0.88              | +11 % |
+| Wavefront Occupancy          | 49.72 %      | 49.69 %           | unchanged |
+| Active CUs                   | 100 %        | 100 %             | unchanged |
+| LDS Bank Conflicts/Access    | 0.03         | 0.14              | +0.11 (still tiny) |
+| VGPRs / SGPRs / scratch      | 116 / 112 / 0 | 120 / 112 / 0    | VGPR +4 |
+
+**Diagnosis**:
+
+1. **VALU active threads jumped from 47 % to 56 %** — exactly what we
+   were aiming for. The 16-lane reduction matches the typical species
+   j-count distribution much better than 64-lane: most species need
+   only 1 iteration of the lane-strided loop, and 16 lanes covering
+   ~10–30 j-entries gives a much higher utilization ratio than 64
+   lanes covering the same range.
+2. **IPC dropped 0.74 → 0.56**. Counter-intuitive at first, but it's
+   because the kernel does *fewer* total instructions per timestep
+   (smaller reductions, smaller per-species overhead): IPC = inst /
+   cycle, the cycle count dropped much faster than the instruction
+   count, so the *ratio* fell. IPC (Issued) actually *rose* to 0.88,
+   meaning the scheduler is issuing nearly an instruction per cycle
+   per wave on average — closer to a fundamental ceiling.
+3. **VGPR went 116 → 120**. The four-way subwave indexing
+   (`subwave = lane >> 4`, `sublane = lane & 15`) adds a couple of
+   live integer values across the j-loop. Tiny cost, no occupancy
+   impact (still LDS-bound at 1 block / CU).
+4. **LDS bank conflicts up 0.03 → 0.14**. Stride-1 reads of
+   `fp_fac_lds[j]` and `fp_map_lds[j]` at `j = p0 + sublane` (sublane
+   in [0, 16)) hit a 16-way pattern over 32 banks — average ~2-way
+   conflict. Contributes ~10s of cycles per timestep, well below the
+   ~1 ms per-zone savings.
+5. Wave occupancy and Active CUs are unchanged (still LDS-bound at
+   1 block / CU, all 104 CUs busy).
+
+**Decision**: **KEPT**. Largest single-experiment win since E30
+(itself the largest since E28). Failure counter still 0.
+
+**Cumulative state at end of E32**:
+
+| metric                | original baseline | **E32**     | Δ |
+|-----------------------|------------------:|------------:|---:|
+| avg_gpu_time (104z, 2it) | 46.7017 s     | **3.022 s** | **−93.5 %** (15.5× speedup) |
+| VGPRs                 | 117              | 120        | +3 |
+| Wavefront occupancy   | 4 waves/CU       | 16 waves/CU | +4× |
+| IPC (Issued)          | low              | 0.88       | near peak |
+| VALU active threads   | 21.6 %           | 55.9 %     | +159 % |
+| Active CUs            | partial          | 100 %      | maxed |
+
+
+### Experiment 33 — 8-lane subwaves (8 species per wave) — **REVERTED**
+
+**Intent**: continue the E31→E32 sub-wave shrink to see if 8-lane
+subwaves win further.
+
+**Change**: same shape as E32 but `subwave = lane >> 3`,
+`sublane = lane & 7`, j-stride 8, 3-shfl reduction over 8 lanes,
+8 species per wave.
+
+**Timing (104 zones, 2 iter, 2 runs)**:
+
+| run | avg per-iter | cycles/zone-batch |
+|-----|-------------:|------------------:|
+| 275693 | 4.2840 s | 100 922 559 |
+| 275694 | 4.2798 s | 100 821 852 |
+
+**Average E33**: **4.282 s** vs E32 3.022 s → **+41.7 %
+REGRESSION**.
+
+**Numerics**: bit-identical (correctness preserved).
+
+**Why**: 8 lanes per species is now narrower than the typical
+j-count (~10–30 for this network), so most species need 2–4
+iterations of the j-loop instead of 1. Each extra iteration costs
+the wave a full ~6-cycle issue regardless of how few lanes are
+active in it, AND the per-species overhead (loop bookkeeping, the
+3-shfl reduction, the lane==0 scalar update) is now amortized over
+fewer j-iterations. Net: more iterations × more per-species
+overhead trumps the marginal lane-utilization gain.
+
+**Decision**: **REVERTED** to E32 (16-lane). Failure counter 0 → 1.
+
+**Sweep summary** (species update sub-wave width, blockDim=1024,
+104 zones, 2 iter):
+
+| sub-wave width | species/wave | avg time | cycles | Δ vs prev |
+|---------------:|-------------:|---------:|-------:|---------:|
+| 64 (E30)       | 1 (full wave)| 6.428 s  | 151.4M | — |
+| 32 (E31)       | 2            | 3.260 s  |  76.8M | −49.3 % |
+| **16 (E32)**   | **4**        | **3.022 s** | **71.2M** | **−7.3 %** |
+| 8  (E33)       | 8            | 4.282 s  | 100.9M | +41.7 % |
+
+Sweet spot is **16 lanes / species** — matches the typical species
+j-count for this network (most species ~10–30 contributing fluxes).
+

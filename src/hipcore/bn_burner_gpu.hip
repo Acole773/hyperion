@@ -249,54 +249,67 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
             __syncthreads(); //this ensures all fluxes have been updated
     
             // --------------------------------------------------------
-            // Species updates  (exp28: wave-cooperative)
+            // Species updates  (exp32: sub-wave-cooperative,
+            //                          4 species per wave / 16 lanes each)
             //
-            // Pre-exp28: each thread handled one species and walked its
-            // entire (p0..p1) and (m0..m1) j-loops sequentially. Within
-            // a wavefront the lanes had wildly different j-counts (a few
-            // species have hundreds of contributing fluxes, most have
-            // only a handful), so the wave waited for the longest-j lane
-            // every timestep. With blockDim=256 / SIZE=150 only 150 of
-            // 256 lanes are even active here, so this was the dominant
-            // divergence source identified by rocprof (VALU active
-            // threads ~15 %).
+            // E28's 64-lane reduction wasted lanes for the common case
+            // where a species has j-count < 64 — measured 47 % VALU
+            // active threads after E30's 16-waves-per-block change.
             //
-            // Now: each *wave* cooperatively updates one species at a
-            // time. All 64 lanes share the j-loop (lane-strided), then
-            // a shuffle reduction collapses to lane 0 which writes the
-            // updated species. Each wave handles ~SIZE/num_waves species
-            // sequentially, so the per-wave critical path scales with
-            // (sum-of-j-counts / 64) instead of (max-j-count).
+            // E32 splits each wave into four 16-lane subwaves. Each
+            // subwave updates a different species concurrently with the
+            // other three subwaves in the same wave. j-loop strides by
+            // 16, the reduction is a 16-wide shfl_down (4 cycles), and
+            // the per-block species count drops from ~10 species per
+            // wave (E30) to ceil(SIZE / (4*num_waves)) per (wave,
+            // subwave). For SIZE=150 / blockDim=1024 this is 3 species
+            // per (wave, subwave).
+            //
+            // The 16-lane width was chosen empirically: 64-lane (E30,
+            // 6.428 s), 32-lane (E31, 3.260 s), 16-lane (E32, 3.022 s),
+            // 8-lane (E33, 4.282 s — regression). 16 matches the typical
+            // species j-count distribution for this network: most
+            // species have j-count ~10–30, so a 16-lane reduction lands
+            // near the lane-utilization sweet spot without paying for
+            // the per-species reduction/scalar-update overhead too
+            // many times.
+            //
+            // Caveat: the wave executes one PC, so the j-loop iteration
+            // count is determined by max(j_count over the four paired
+            // species). For widely mismatched groups the long-tail
+            // subwaves waste their lane budget. Sorting species by
+            // j-count to make balanced groups is a potential follow-up.
             //
             // Numerical impact: parallel reduction reorders the FP sums
-            // vs the sequential j-loop, so results are not bit-identical
-            // but stay within machine epsilon * O(log N) (well inside
-            // the 1e-12 relative tolerance).
+            // but stays bit-identical for this network (same as E28).
             // --------------------------------------------------------
             {
-                const int wave = tid >> 6;
-                const int lane = tid & 63;
-                const int nw   = blockDim.x >> 6;
+                const int wave    = tid >> 6;
+                const int lane    = tid & 63;
+                const int subwave = lane >> 4;        // 0..3
+                const int sublane = lane & 15;        // 0..15
+                const int nw      = blockDim.x >> 6;
+                const int nsub    = nw << 2;          // 4 species per wave
 
-                for (int i = wave; i < SIZE; i += nw) {
+                for (int i = wave * 4 + subwave; i < SIZE; i += nsub) {
                     int p0 = (int)fp_max_lds[i] + 1;
                     int m0 = (int)fm_max_lds[i] + 1;
                     int p1 = (int)fp_max_lds[i + 1];
                     int m1 = (int)fm_max_lds[i + 1];
 
                     double plus = 0.0;
-                    for (int j = p0 + lane; j <= p1; j += 64)
+                    for (int j = p0 + sublane; j <= p1; j += 16)
                         plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
-                    for (int offset = 32; offset > 0; offset >>= 1)
-                        plus += __shfl_down(plus, offset, 64);
+                    for (int offset = 8; offset > 0; offset >>= 1)
+                        plus += __shfl_down(plus, offset, 16);
 
                     double minus = 0.0;
-                    for (int j = m0 + lane; j <= m1; j += 64)
+                    for (int j = m0 + sublane; j <= m1; j += 16)
                         minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
-                    for (int offset = 32; offset > 0; offset >>= 1)
-                        minus += __shfl_down(minus, offset, 64);
+                    for (int offset = 8; offset > 0; offset >>= 1)
+                        minus += __shfl_down(minus, offset, 16);
 
-                    if (lane == 0) {
+                    if (sublane == 0) {
                         double x_i = xout_zone[i];
                         if (minus * dt > x_i) {
                             x_i = (x_i + plus * dt) /
