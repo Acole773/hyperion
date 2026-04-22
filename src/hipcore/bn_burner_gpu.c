@@ -155,8 +155,10 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     // Experiment 16: +SIZE doubles for aa LDS (+ 8 bytes alignment slack).
     // Experiment 19: +(NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) uchar for
     //                f_plus_factor / f_minus_factor LDS.
+    // Experiment 25: xout_lds is now SIZE+1 doubles (+1 dummy slot for
+    //                branchless unused-reactant masking).
     size_t sharedmem_allocation =
-	sizeof(double) * (NUM_REACTIONS + num_waves + NUM_REACTIONS + SIZE)
+	sizeof(double) * (NUM_REACTIONS + num_waves + NUM_REACTIONS + (SIZE + 1))
         + 4 * NUM_REACTIONS * sizeof(unsigned char)
         + (2 * (SIZE + 1) + NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned short)
         + (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned char)

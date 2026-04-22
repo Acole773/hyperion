@@ -48,6 +48,8 @@ void hyperion_init_() {
     rate_library_create(rate_path, NUM_REACTIONS);
     network_create(network_path, NETWORK_SIZE);
 
+    rate_library_fixup_unused_reactants();
+
     data_init();
 
     return;
