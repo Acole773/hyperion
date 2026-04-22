@@ -140,7 +140,19 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     );
 
     // Kernel launch parameters
-    dim3 blockdim(256, 1, 1);
+    // exp30: 256 -> 1024 (4 waves -> 16 waves per block). The E28
+    // wave-cooperative species update has per-wave critical path
+    // ~ (sum_of_j_counts_for_my_species / 64), so quadrupling the
+    // wave count quarters the per-wave species count (~38 -> ~10) and
+    // gives the SIMD scheduler 4x more in-flight waves to hide LDS /
+    // HBM latency between issue slots. LDS budget per block is
+    // unchanged (LDS is block-shared, not per-wave). VGPR cost
+    // (16 * 116 = 1856 VGPRs / CU) still fits in the gfx90a 2048
+    // VGPR/CU budget. Measured: wave occupancy 9% -> 49.7%, IPC
+    // 0.35 -> 0.74, end-to-end -51.5% vs E28 (4 waves), -86.2%
+    // cumulative vs original baseline. 1024 is the gfx90a hardware
+    // max, cannot go higher.
+    dim3 blockdim(1024, 1, 1);
     int blocks = zones;
     dim3 griddim(blocks, 1, 1);
     int num_waves = blockdim.x / 64;

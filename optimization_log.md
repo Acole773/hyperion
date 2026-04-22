@@ -487,7 +487,7 @@ kernel was validated against the original baseline.
 |------------------|-----------------------------|
 | build job        | `274424` (clean)            |
 | run job          | `274425`                    |
-| node             | TheraC59 (MI250)            |
+| node             | MI250                       |
 | zones, iterations| 104, 1                      |
 | log              | `output_20260420_173757.txt`|
 
@@ -937,4 +937,188 @@ the partial sums only live across 64-strided iterations.
 | L2-Fabric BW          | high (memory-bound) | 0 Gb/s    | eliminated |
 | VALU active threads   | 21.6 % (early)   | 45.78 %    | +112 % |
 
+
+### Experiment 29 — Two-phase species update (Phase A reduce / Phase B asym-Euler) — **REVERTED**
+
+**Intent**: kill the remaining `if (lane == 0)` scalar asym/Euler
+serialization identified in the E28 rocprof. In E28 each wave does ~38
+species sequentially and burns ~30 cycles per species on lane 0 (with
+63 idle lanes) for the asym/Euler scalar update. Plan: split into
+
+- **Phase A** — wave-cooperative j-loop reduction (same as E28). Lane 0
+  stages `plus`/`minus` to two new per-species LDS arrays
+  `plus_lds[i]` / `minus_lds[i]`.
+- **Phase B** — every thread (or every lane in its own wave) does one
+  species' asym/Euler scalar update in parallel.
+
+Two variants tried:
+
+- **E29a (cross-wave Phase B)**: `for (int i = tid; i < SIZE; i += blockDim.x)`,
+  with a `__syncthreads()` between phases (because thread `t` in wave
+  `t/64` may read a species written by a different wave).
+- **E29b (per-wave Phase B)**: lane `k` of wave `w` reads species
+  `w + k * num_waves` (the k-th species this same wave produced in
+  Phase A). No cross-wave dependency, so the block-level barrier is
+  replaced by an inline `s_waitcnt lgkmcnt(0)` that just drains this
+  wave's pending LDS stores.
+
+**LDS cost**: +2 × SIZE × 8 = +2400 B (well under the 64 KB CU budget).
+
+**Numerics**: bit-identical to baseline in both variants.
+
+**Timing (104 zones, 2 iter, 2 runs each)**:
+
+| variant | run | avg per-iter | cycles/zone-batch |
+|---------|-----|-------------:|------------------:|
+| E29a    | 275671 | 14.1254 s | 332 764 246 |
+| E29a    | 275672 | 14.1222 s | 332 684 297 |
+| E29b    | 275674 | 14.1394 s | 333 094 670 |
+| E29b    | 275675 | 14.1346 s | 332 978 887 |
+| **E28** (re-measured today, 275677/275678) | — | **13.240 s** | **311 898 406** |
+
+**Result**: **+6.7 % regression** in both variants vs E28 (re-measured
+on the same nodes the same day to rule out node variance — E28 came in
+at 13.240 s, well within ±0.01 s of its original 13.238 s number). The
+hypothesis was wrong:
+
+- The lane-0 scalar update doesn't actually stall the wave for ~30
+  cycles per species — on AMDGPU the scalar/VALU instructions still
+  issue at 1 inst/cycle even with EXEC = 1 lane, and they overlap with
+  the next wave's reduction work via the SIMD scheduler. So the "wasted
+  63 lanes" are accounting fiction, not real critical path.
+- What *is* real cost: the extra LDS round-trip (lane-0 store of
+  `plus`/`minus` + per-lane reload in Phase B) and the synchronization
+  between phases (block barrier in E29a, wave-local waitcnt in E29b).
+  Both variants pay it, both regress identically (~+6.7 %).
+- The per-wave variant (E29b) does drop the block-level barrier but
+  still has to drain the LDS write queue and re-issue 2 LDS reads per
+  species — apparently the LDS-RAW dependency cost dominates the
+  barrier cost in the original layout.
+
+**Decision**: **REVERTED**. The asym/Euler scalar work on lane 0 is
+not actually a bottleneck at this point. Failure counter 0 → 1.
+
+**Lesson**: don't trust "% inactive lanes" as a proxy for cost when
+the scalar workload per wave is small and the wave scheduler can
+already overlap it with other waves' compute. The real bottleneck must
+be measured in *wave critical-path cycles*, not lane utilization.
+
+
+### Experiment 30 — Increase blockDim 256 → 1024 (4 waves → 16 waves per block)
+
+**Intent**: the E28 wave-cooperative species update has per-wave
+critical path ≈ `(sum_of_j_counts_for_that_wave's_species) / 64 +
+shfl_overhead × num_species_per_wave`. With blockDim=256 (4 waves),
+each wave handles ~38 species, so the critical path per timestep is
+dominated by ~38 × (avg_j/64 + 6 shfl ≈ 22) ≈ 1300 cycles. Going to
+**16 waves per block** drops it to ~10 species per wave → ~340 cycles,
+plus 4× more in-flight waves to hide LDS/HBM latency. LDS budget per
+block is unchanged (LDS is block-shared, not per-wave). The kernel
+source is unchanged — `blockDim.x` is a runtime parameter and `nw =
+blockDim.x >> 6` already adapts the wave-cooperative loop bounds.
+
+**Change**:
+
+```c
+// src/hipcore/bn_burner_gpu.c
+- dim3 blockdim(256, 1, 1);
++ dim3 blockdim(1024, 1, 1);
+```
+
+A 512-thread (8-wave) intermediate point was also measured to chart the
+trend.
+
+**Timing (104 zones, 2 iter, 2 runs across two MI250 nodes)**:
+
+| blockDim | waves/block | run     | avg per-iter | cycles/zone-batch |
+|---------:|------------:|---------|-------------:|------------------:|
+| 256 (E28)| 4           | 275677  | 13.2419 s    | 311 950 825 |
+| 256 (E28)| 4           | 275678  | 13.2376 s    | 311 845 987 |
+| 512      | 8           | 275680  |  7.5461 s    | 177 769 678 |
+| 512      | 8           | 275681  |  7.5457 s    | 177 759 849 |
+| **1024** | **16**      | 275683  | **6.4285 s** | **151 442 629** |
+| **1024** | **16**      | 275684  | **6.4272 s** | **151 411 335** |
+
+**Average E30 (1024)**: **6.428 s**, vs E28 13.240 s → **−51.5 %** in this
+experiment alone. vs original baseline 46.7017 s → **−86.2 % CUMULATIVE**.
+
+(The 8-wave point at 7.546 s gives −43.0 % vs E28; doubling once more to
+16 waves gives another −14.8 %, showing diminishing returns as the
+per-wave critical path stops dominating and the per-block fixed cost
+starts to matter. 1024 is the gfx90a hardware max; cannot go higher.)
+
+**Numerics**: **bit-identical** to baseline at both 512 and 1024 (sdot
+diff vs `baseline_output.txt` = 0 lines for both runs).
+
+**Assembly (`asm_e30/e30.s`)**: 28 823 lines, **identical** to
+`asm_e28/e28.s` (same VGPR=115, SGPR=100, scratch=0). The kernel code
+is unchanged — the entire win is from launch configuration, not
+codegen.
+
+**rocprof-compute (job 275685, 14-iter, kernel-filtered)**:
+
+| metric                       | E28           | **E30 (1024)** | Δ |
+|------------------------------|--------------:|---------------:|---:|
+| Wavefront Occupancy          | 299.5/3328 (9.0 %) | **1654.6/3328 (49.7 %)** | **+5.5×** |
+| IPC                          | 0.35          | **0.74**       | **+111 %** |
+| IPC (Issued)                 | 0.83          | 0.79           | small drop |
+| VALU Active Threads          | 29.3/64 (45.78 %) | 29.89/64 (46.7 %) | +2 % |
+| VALU Utilization             | 10.42 %       | (similar)      | unchanged |
+| LDS Bank Conflicts/Access    | 0.03          | 0.03           | unchanged |
+| Active CUs                   | 82/104 (78.8 %) | **104/104 (100 %)** | +27 % |
+| HBM Bandwidth                | 0 Gb/s        | 1638 Gb/s peak | now exercising HBM more, but L2 hit still high |
+| VGPRs / SGPRs / scratch      | 116 / 112 / 0 | 116 / 112 / 0  | unchanged |
+
+**Diagnosis**:
+
+1. **Wavefront occupancy quintupled** (9 % → 49.7 %) — exactly because
+   the same single block per CU now contains 4× more waves (16 vs 4).
+   Same LDS, same per-wave VGPR pressure, just more waves packed in.
+2. **IPC doubled** (0.35 → 0.74). With ~16 active waves per CU instead
+   of 4, the scheduler has enough in-flight work to hide LDS latency
+   between issue slots. This is the direct mechanism for the speedup.
+3. **VALU active threads barely moved** (45.8 % → 46.7 %), confirming
+   the per-wave divergence pattern is unchanged — the win is *not*
+   from reducing divergence but from hiding it across more waves.
+4. **Active CUs jumped to 100 %** (was 78.8 %) — with smaller blocks
+   the early/last CU launch latency mattered; with fewer, larger
+   blocks the scheduler now keeps every CU busy through the whole
+   kernel duration.
+5. HBM now shows nonzero traffic; that's because with 4× more compute
+   throughput per CU, the per-zone LDS-staging at block entry and
+   xout writeback at block end dominate the HBM time. Still small
+   relative to total runtime.
+
+**Decision**: **KEPT**. Largest single-experiment win since E28
+(itself the largest since E19). Failure counter reset 1 → 0.
+
+**Cumulative state at end of E30**:
+
+| metric                | original baseline | **E30**     | Δ |
+|-----------------------|------------------:|------------:|---:|
+| avg_gpu_time (104z, 2it) | 46.7017 s     | **6.428 s** | **−86.2 %** |
+| VGPRs                 | 117              | 116        | −1 |
+| Wavefront occupancy   | 4 waves/CU       | **16 waves/CU (49.7 % of peak)** | +4× |
+| IPC                   | 0.10 (baseline) | 0.74        | +7× |
+| VALU active threads   | 21.6 %           | 46.7 %     | +116 % |
+| Active CUs            | (n/a, smaller blocks) | 100 % | maxed |
+
+**Observations for next phase**:
+
+- The cheap launch-config win has been spent (1024 is the hardware
+  max). Further wins must come from kernel-code changes again.
+- IPC at 0.74 / 5.0 = 14.8 % of peak still leaves plenty of headroom.
+- VALU active threads still only 47 % — divergence remains the
+  long-term ceiling. Now that latency hiding is sufficient, the
+  bottleneck shifts back to per-wave critical-path divergence in the
+  j-loop tails of small species. Promising next directions:
+  1. Process **multiple small species per wave** at sub-wave
+     granularity (subwave = 16 lanes / species) so short j-loops use
+     fewer lanes but still keep the wave fully active.
+  2. Pad short j-ranges to a multiple of 16/32 with
+     sentinel `(fac=0, map=SIZE)` entries (uses the existing
+     `xout_zone[SIZE] = 1.0` trick) to eliminate tail divergence
+     within the per-species reduction.
+  3. Look at the rate-eval loop and energy/norm reductions, which
+     are now a larger relative fraction of total time.
 
