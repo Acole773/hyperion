@@ -1763,3 +1763,250 @@ L1 per CU → cache thrash). Deferred as high-risk.
 
 
 
+### Experiment 39 — Pack `fp_map` + `fp_fac` into one `uint16` per j
+
+**Intent**: E37 rocprof showed LDS at 67.56-cycle latency
+and the species-update j-loop issuing two independent LDS
+loads per iter (`ds_read_u16` for the map + `ds_read_u8` for
+the fac). Although they are independent (so they overlap on
+the LDS queue), they still consume two SIMD-issue slots per
+j and the `lgkmcnt()` we wait for is the max of the two
+latencies. Combining them into a single `uint16` per j cuts
+SIMD issue pressure on what is the hottest inner loop in the
+kernel.
+
+**Change**: LDS now holds a single `unsigned short* f{p,m}_pack_lds`
+per side instead of separate `f{p,m}_map_lds` (ushort) +
+`f{p,m}_fac_lds` (uchar) arrays. The pack layout uses 12 bits
+for the reaction index (max value 1603 in this network,
+fits in 12 bits) and 4 bits for the stoichiometric factor
+(validated at host-side startup to be ≤ 15). Both j-loops in
+Phase 1 and Phase 2 now do:
+
+```cpp
+unsigned pk = fp_pack_lds[j];
+plus += (double)(pk >> 12) * flux[(int)(pk & 0x0FFFu)];
+```
+
+Host-side LDS budget drops by `NUM_FLUXES_PLUS + NUM_FLUXES_MINUS`
+bytes = ~5.3 KB (50 KB → 44.6 KB). Host also added an
+assertion that validates the 4-bit fac-fit assumption and
+aborts loudly if a future network violates it.
+
+**Timing (104 zones, 2 iter, 3 runs)**:
+
+| run    | avg per-iter |
+|-------:|-------------:|
+| 276607 | 1.7083 s |
+| 276608 | 1.7085 s |
+| 276609 | 1.7085 s |
+
+**Average E39**: **1.708 s** vs E37 1.738 s → **−1.7 %**.
+
+**Numerics**: bit-identical (max_rel = 0.000e+00).
+
+**Bonus**: VGPR count dropped 125 → 105 (−16 %) because the
+packed load eliminates one load value that had to live in a
+register for the duration of an iter. SGPR stayed at 100.
+
+**Decision**: **KEPT**. Small but real; more importantly it
+gives us 5.3 KB of LDS headroom for future reorganizations
+and reduces VGPR pressure.
+
+
+### Experiment 40 — Pack `reactant_1/2/3` + `nrs` into one `uint32` per reaction
+
+**Intent**: Same idea as E39, but applied to the *flux loop*
+(the other hot per-timestep loop). Each iter of the flux
+loop was issuing three `ds_read_u8` instructions (one each
+for `r1_lds[r]`, `r2_lds[r]`, `r3_lds[r]`) plus the
+sentinel-protected `ds_read_b64` for `xout_zone[idx_k]` and
+the `rate[r]` load and the `flux[r]` store. Dropping two of
+those LDS ops per reaction lightens SIMD issue pressure on
+the second-hottest inner loop.
+
+**Change**: The four arrays `nrs_lds / r1_lds / r2_lds /
+r3_lds` (each `NUM_REACTIONS` uchars, already adjacent in
+LDS) are merged into one `unsigned int* rxns_lds` of
+`NUM_REACTIONS` uint32s. Byte layout: `[r1 | r2 | r3 | nrs]`.
+
+- Flux loop: `unsigned rxns = rxns_lds[r]; idx1 = rxns & 0xFF;
+  idx2 = (rxns >> 8) & 0xFF; idx3 = (rxns >> 16) & 0xFF;`
+  One `ds_read_b32` replaces three `ds_read_u8` (−2 LDS ops
+  per reaction per timestep).
+- Once-per-zone rate-eval loop: `ns = (int)(rxns_lds[r] >>
+  24) - 1;` Same number of LDS ops as before (one load),
+  but now reads a full uint32 just to extract byte 3.
+
+LDS footprint unchanged (4 × `NUM_REACTIONS` bytes either
+way).
+
+**Timing (104 zones, 2 iter, 3 runs)**:
+
+| run    | avg per-iter |
+|-------:|-------------:|
+| 276614 | 1.6692 s |
+| 276615 | 1.6667 s |
+| 276616 | 1.6690 s |
+
+**Average E40**: **1.668 s** vs E39 1.708 s → **−2.4 %**,
+vs E37 1.738 s → **−4.1 %** cumulative.
+
+**Numerics**: bit-identical.
+
+**VGPRs**: 105 → 109 (+4). SGPR unchanged.
+
+**Decision**: **KEPT**. Solid stackable win on top of E39
+because it targets a completely different inner loop.
+
+
+### Experiment 41 — Reduce scalar update from 2 divisions to 1
+
+**Intent**: The scalar update in both Phase 1 and Phase 2
+contains an *implicit* branch of the form
+
+```cpp
+x_i = (x_i + plus*dt) / (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
+```
+
+which issues *two* double-precision divisions. Double-
+precision division is one of the slowest VALU ops on gfx90a
+(~30 cycles via Newton-Raphson iterations). Halving the
+division count per implicit-branch species update is
+therefore a >20-cycle savings per branch taken.
+
+**Change**: algebraic reformulation:
+
+```cpp
+double d = x_i + ZERO_FIX;
+x_i = (x_i + plus * dt) * d / (d + minus * dt);
+```
+
+This is mathematically identical:
+`(x_i + plus·dt) / (1 + minus·dt/d) = (x_i + plus·dt)·d / (d + minus·dt)`
+but trades 1 division for 1 multiplication. Applied in both
+the Phase 1 (64-lane) and Phase 2 (16-lane) scalar updates.
+
+**Timing (104 zones, 2 iter, 3 runs)**:
+
+| run    | avg per-iter |
+|-------:|-------------:|
+| 276618 | 1.6489 s |
+| 276619 | 1.6515 s |
+| 276620 | 1.6529 s |
+
+**Average E41**: **1.650 s** vs E40 1.668 s → **−1.1 %**,
+vs E37 1.738 s → **−5.1 %** cumulative.
+
+**Numerics**: bit-identical (max_rel = 0.000e+00). The two
+formulations evaluate to the same IEEE-754 double for this
+dataset even though operator order differs — a pleasant
+surprise; correctness is still within the 1 e-12 relative-
+tolerance budget regardless.
+
+**Decision**: **KEPT**.
+
+
+### Experiment 42 — Hoist Phase 1 species bounds out of the timestep loop (NEGATIVE)
+
+**Intent**: Each Phase 1 wave has a fixed species index for
+the whole zone (`species_perm[wave]`), so `p0 / p1 / m0 / m1`
+derived from `f{p,m}_max_lds[i]` are timestep-invariant. The
+inner loop was reloading all four every one of the ~460 000
+timesteps.
+
+**Change**: moved the four `(int)f{p,m}_max_lds[i] + 1 / [i+1]`
+loads *above* the `while (!done)` timestep loop, into
+registers `p0_ph1 / p1_ph1 / m0_ph1 / m1_ph1 / i_ph1`
+guarded by `if (wave < phase1_count)`.
+
+**Timing (104 zones, 2 iter, 3 runs)**:
+
+| run    | avg per-iter |
+|-------:|-------------:|
+| 276623 | 1.6762 s |
+| 276624 | 1.6765 s |
+| 276625 | 1.6788 s |
+
+**Average E42**: **1.678 s** vs E41 1.650 s → **+1.6 %
+regression**. Reverted.
+
+**Why it regressed**: the 4 hoisted values live in VGPRs
+that persist across the entire timestep loop, raising
+pressure in the *inner* loops where VGPRs are the scarce
+resource. Compiler spills something else to compensate,
+which hurts more than the 4 LDS broadcasts saved per
+timestep (they were wave-uniform and hit the LDS broadcast
+path at ~1 cycle each, so the saving was tiny to begin
+with). Lesson: the compiler's default scheduling already
+handles wave-uniform invariants well, because the LDS
+broadcast path is already near-free.
+
+
+### Experiment 43 — `#pragma unroll 2` on the flux loop (NEGATIVE)
+
+**Intent**: The flux loop runs 1-2 iterations per thread
+(`NUM_REACTIONS=1604, blockDim=1024`), so a 2× unroll should
+give the compiler two independent reactions to interleave
+per thread, hiding the 67-cycle LDS latency of iter 1's
+gather behind iter 2's gather.
+
+**Change**: `#pragma unroll 2` directly above the flux loop.
+
+**Timing (104 zones, 2 iter, 3 runs)**:
+
+| run    | avg per-iter |
+|-------:|-------------:|
+| 276630 | 1.7212 s |
+| 276631 | 1.7208 s |
+| 276632 | 1.7208 s |
+
+**Average E43**: **1.721 s** vs E41 1.650 s → **+4.3 %
+regression**. Reverted.
+
+**Why it regressed**: the compiler unrolled the loop *and*
+generated a scalar tail epilogue to handle the odd iteration
+on threads 0-579 (which have 2 iters) vs threads 580-1023
+(which have only 1). The tail epilogue adds a new branch and
+extra bookkeeping instructions that outweigh the latency
+hiding, and the unrolled body raises VGPR pressure in the
+same way as E42. Lesson: for loops that already
+dynamically handle a non-uniform iter count (via the
+`r < NUM_REACTIONS` bound), a manual unroll hint can turn a
+clean guard into a branchy epilog. The compiler's default
+unroll heuristic knew better.
+
+
+**Cumulative state at end of E41**:
+
+| metric                | original baseline | **E41**     | Δ |
+|-----------------------|------------------:|------------:|---:|
+| avg_gpu_time (104z, 2it) | 46.7017 s     | **1.650 s** | **−96.47 %** (~28.31× speedup) |
+| VGPRs                 | 117              | 109        | −7 |
+| SGPRs                 | n/a              | 100        | — |
+| LDS / block           | n/a              | ~44.6 KB   | (was 50 KB at E37) |
+| Wavefront occupancy   | 4 waves/CU       | 16 waves/CU (49.8 %) | unchanged |
+
+
+**Observations for next phase**:
+
+- Three of the last four attempts that tried to rescue
+  resources from the hot path (E42 hoist, E43 unroll, E38
+  rate-to-global) have *regressed*. We are on a flat part
+  of the optimization surface where simple local rewrites
+  are just as likely to hurt as help. The compiler has
+  good default scheduling for this code.
+- The remaining structural lever is **occupancy**. At 44.6 KB
+  LDS we still need to shed another ~12.6 KB to fit 2
+  blocks/CU. The only way to get there in one step is to
+  move *both* `rate` and `flux` to global memory
+  simultaneously (saves 25.6 KB → ~19 KB LDS, comfortably
+  below 32 KB). This is a real refactor with real L1 thrash
+  risk (each block's working set becomes 25.6 KB, vs 16 KB
+  L1 per CU), but it is the only obvious remaining path to
+  another step-function improvement.
+- On the micro side, the next opportunities are in the
+  Phase 2 scalar update (still divergent across sublanes)
+  and in the flux-loop iter-2 tail divergence (~450 threads
+  idle for 1 inner iter out of ~7). Neither is likely to
+  deliver more than 1-2 %.

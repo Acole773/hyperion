@@ -110,6 +110,23 @@ int device_init(int zones) {
     HIP_ALLOC_COPY(args.f_minus_map, f_minus_map, f_minus_total);
     HIP_ALLOC_COPY(args.f_plus_factor, f_plus_factor, f_plus_total);
     HIP_ALLOC_COPY(args.f_minus_factor, f_minus_factor, f_minus_total);
+    // exp39: packed layout assumes stoichiometric factors fit in 4 bits
+    // (values 0..15). Validate both factor arrays against this bound
+    // once per invocation; abort loudly if a reaction violates it so a
+    // future wider-coefficient network surfaces the failure immediately
+    // rather than silently producing wrong answers.
+    {
+        double max_fp = 0.0, max_fm = 0.0;
+        for (size_t j = 0; j < f_plus_total; j++)  if (f_plus_factor[j]  > max_fp) max_fp = f_plus_factor[j];
+        for (size_t j = 0; j < f_minus_total; j++) if (f_minus_factor[j] > max_fm) max_fm = f_minus_factor[j];
+        if (max_fp > 15.0 || max_fm > 15.0) {
+            fprintf(stderr,
+                "exp39 packed-LDS assumption violated: max f_plus_factor=%g "
+                "max f_minus_factor=%g (must be <= 15)\n",
+                max_fp, max_fm);
+            return EXIT_FAILURE;
+        }
+    }
     HIP_ALLOC_COPY(args.f_plus_max, f_plus_max, num_species + 1);
     HIP_ALLOC_COPY(args.f_minus_max, f_minus_max, num_species + 1);
     HIP_ALLOC_COPY(args.num_react_species, num_react_species, num_reactions);
@@ -286,11 +303,16 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     //                f_plus_factor / f_minus_factor LDS.
     // Experiment 25: xout_lds is now SIZE+1 doubles (+1 dummy slot for
     //                branchless unused-reactant masking).
+    // Experiment 39: fp_map+fp_fac (and fm_map+fm_fac) merged into a
+    //                single uint16 per j (map in low 12 bits, fac in
+    //                top 4 bits). Drops the old +uchar term entirely,
+    //                saving (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) bytes
+    //                of LDS and one LDS op per j in the species-update
+    //                inner loops.
     size_t sharedmem_allocation =
 	sizeof(double) * (NUM_REACTIONS + num_waves + NUM_REACTIONS + (SIZE + 1))
         + 4 * NUM_REACTIONS * sizeof(unsigned char)
         + (2 * (SIZE + 1) + NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned short)
-        + (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned char)
         + SIZE * sizeof(double) + 8;
 
     hyperion_burner_dev_kernel<<<griddim, blockdim, sharedmem_allocation>>>(
