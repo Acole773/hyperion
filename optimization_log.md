@@ -2010,3 +2010,173 @@ unroll heuristic knew better.
   and in the flux-loop iter-2 tail divergence (~450 threads
   idle for 1 inner iter out of ~7). Neither is likely to
   deliver more than 1-2 %.
+
+### Experiment 44 — Move `rate[]` AND `flux[]` to global HBM (PLAN)
+
+**Motivation**: The zone-sweep analysis in
+`zone_sweep_analysis.md` confirmed that the kernel scales
+perfectly across multiples of 104 zones (100.3–100.5 %
+efficiency at 208, 312, 416, 520, 1040 zones) but the
+per-zone cost is hard-floored by single-block performance
+because LDS pins occupancy at 1 block/CU.
+
+At E41 the block LDS budget is ~44.6 KB out of 64 KB/CU
+available. To fit 2 blocks/CU we need to cross the 32 KB
+threshold in **one shot** — the E38 lesson (moving just
+`rate` alone regressed by 2.8 %) showed that single-array
+cuts that do not cross the threshold are net losses because
+they replace a same-queue LDS op with a cross-queue vmem
+op.
+
+**Change**: remove *both* `rate[NUM_REACTIONS]` AND
+`flux[NUM_REACTIONS]` from LDS in one experiment.
+
+1. Host (`bn_burner_gpu.c`):
+   - `d_flux` already declared but never allocated; allocate
+     `Nzones × NUM_REACTIONS × sizeof(double)` in
+     `device_init` (same sizing as `d_rate`).
+   - Drop `2 × NUM_REACTIONS × sizeof(double)` from
+     `sharedmem_allocation`, saving 25 664 B ≈ 25 KB.
+   - Add `d_flux` to the kernel-launch arg list.
+2. Kernel (`bn_burner_gpu.hip`):
+   - New kernel arg: `double* __restrict__ flux_g`.
+   - Remove `flux` and `rate` from the LDS layout; all LDS
+     pointers previously beyond them shift down by
+     `2*NUM_REACTIONS*sizeof(double)`.
+   - Inside the per-zone loop: set
+     `double* flux = flux_g + zone * NUM_REACTIONS;`
+     `double* rate = rate_g + zone * NUM_REACTIONS;`
+
+Expected LDS after change: 44.6 − 25.0 ≈ 19.6 KB, well
+under the 32 KB/block threshold → 2 blocks/CU should be
+achievable.
+
+**Expected wins**:
+
+- Occupancy jumps from 16 waves/CU (1 block × 16 waves) to
+  32 waves/CU (2 blocks × 16 waves) if the compiler does not
+  raise VGPR pressure past the 512-VGPR/CU limit (each
+  block currently uses 109 × 16 = 1744 VGPRs/block; 2
+  blocks = 3488 > 512 × 4 waves = 2048 → actually each CU
+  has 256 VGPRs × 4 SIMDs × 64 lanes = 65 536 VGPR slots,
+  so 2×16×64×109 = 223 232 slots needed, way under cap).
+- Best-case single-block time drops roughly 40–50 % because
+  there is now another resident block to hide the LDS and
+  vmem latencies of the incumbent.
+
+**Risks**:
+
+- Each block's resident working set becomes 25.6 KB
+  (flux + rate) which exceeds the 16 KB L1/CU → guaranteed
+  L1 thrash. But 104 × 25.6 KB ≈ 2.6 MB fits in the 8 MB
+  shared L2, so L2 hit rate should stay high. Net impact
+  depends on whether the L2-load-on-miss pipeline can
+  saturate the HBM bus (≈ 1600 GB/s on MI250 GCD).
+- Write pressure: `flux[r] = ...` now becomes a vmem store
+  in the hottest loop (once per reaction per timestep per
+  block). 1604 stores × 460 000 timesteps × 104 blocks =
+  77 × 10⁹ stores total per run at 104 zones. At 8 B each
+  = 614 GB. Amortized over 1.65 s at E41, that's 372 GB/s
+  — comfortably within HBM write bandwidth but not cheap.
+- A single botched pointer shift in the LDS layout silently
+  corrupts packed arrays → hence bit-identity check at the
+  end is non-negotiable.
+
+**Rollback strategy**: if the experiment regresses or
+produces non-bit-identical output, revert in one commit and
+fall back to E41 for the "best-so-far at 104 zones" story.
+If it improves 104z but degrades at 1040z (L2 thrash at
+scale), consider a hybrid: keep `flux` in LDS but move just
+`rate` + something else that totals >12.6 KB. Candidate
+partners for `rate`: `xout_lds` is only 1.2 KB (too small);
+`rxns_lds` is 6.3 KB (just packed in E40, hard to revert);
+`aa_lds` is 1.2 KB (too small). Realistically, the only
+single-experiment path to <32 KB is the dual-remove of this
+experiment or similarly aggressive "flux to global" alone.
+
+---
+
+**E44 RESULT — REVERTED (bit-identical but uniform
++3.6–3.9 % regression across the full zone sweep).**
+
+Implemented exactly as planned. Bit-identical species
+output + sdotrate at 104z/2iter vs E41 (verified via
+`diff` of the full result tables). Zone sweep, 2 iters,
+MI250 GCD 0:
+
+| zones | E41 gpu_s | E44 gpu_s | delta |
+|------:|----------:|----------:|------:|
+|    52 |    1.6569 |    1.6945 | +2.3 % |
+|   104 |    1.7208 |    1.7833 | +3.6 % |
+|   156 |    3.3571 |    3.4414 | +2.5 % |
+|   208 |    3.4328 |    3.5594 | +3.7 % |
+|   260 |    5.0605 |    5.1875 | +2.5 % |
+|   312 |    5.1417 |    5.3535 | +4.1 % |
+|   416 |    6.8571 |    7.1018 | +3.6 % |
+|   520 |    8.5629 |    8.8993 | +3.9 % |
+|   780 |   13.6011 |   13.9441 | +2.5 % |
+|  1040 |   17.1167 |   17.7624 | +3.8 % |
+
+**Diagnosis — why no occupancy win materialized**:
+
+The LDS-pressure gate was cleared as planned (layout now
+~19.6 KB per block, well under the 32 KB threshold for
+2 blocks/CU). But the per-zone cost at 208 zones under E44
+is 17 112 µs/zone — indistinguishable from E44's own 104z
+number of 17 147 µs/zone (efficiency 100.2 %). Under E41
+the same 208z run gives 16 504 µs/zone also with 100.0 %
+efficiency. That is the tell: **both E41 and E44 are
+already running 1 block/CU with perfect strong scaling;
+E44 did not actually raise occupancy**. Two plausible
+explanations (we do not have a confirmed kernel property
+report from hipcc with the new build, so some is
+inference):
+
+1. **VGPR ceiling, not LDS, is the binding constraint**.
+   Recent experiments (E40/E41) pushed VGPRs up to the
+   ~105–128 range. On gfx90a each SIMD has 512 VGPRs; two
+   resident 256-thread blocks (4 waves each) at 128 VGPRs
+   would need 8 waves × 128 = 1024 VGPRs/SIMD which is
+   2× over budget. Even the 105 VGPR case (E39) would
+   require 8 × 105 = 840 — still over. So the occupancy
+   limiter may have been VGPRs all along, and LDS was the
+   visible but non-binding headline.
+2. **HBM traffic cost is paid even at 1 block/CU**.
+   Under E41, `rate[]` and `flux[]` are LDS-resident for
+   the lifetime of the zone: ~460 000 timesteps of reads
+   and writes all hit LDS (~20 ns round-trip). Under E44,
+   every `rate[r]` / `flux[r]` access goes through the
+   L1 → L2 → HBM pipeline. Even with excellent L2 residency
+   (25.6 KB fits easily) the per-access latency is
+   measurably higher than LDS, and the aggregate throughput
+   at 1 block/CU is what's binding us — not occupancy.
+
+**Conclusion**: E44 is the fourth consecutive experiment
+that confirms *we are past the productive LDS-reduction
+cliff*. The E41 LDS layout is already the sweet spot for
+the current VGPR budget.
+
+**Revert**: `git stash push` of the E44 edits in
+`bn_burner_gpu.c/.h/.hip`; tree restored to E41 and
+rebuilt bit-identical.
+
+**Next-experiment implications** (for E45+):
+
+- Going after occupancy first requires **VGPR reduction**,
+  not further LDS reduction. Candidates:
+  - Recompute some scalars on-the-fly instead of storing
+    them across the long-lived inner loops.
+  - Use `-mllvm -amdgpu-waves-per-eu=2` or
+    `-mllvm -amdgpu-max-waves-per-eu=2` pragmas to force
+    the compiler toward 2 blocks/CU and measure what it
+    costs in spill/reload.
+  - Drop `__restrict__` on a writable argument to reduce
+    uniqueness-tracked VGPR lifetimes (unlikely to help,
+    but cheap to test).
+- Alternatively, target latency/bandwidth directly:
+  - Tune block size (currently 256) — 128 or 192 thread
+    blocks might fit 2–3 per CU at the same VGPR budget
+    even without LDS/VGPR reductions.
+  - Investigate the E35 species-permutation j-bin histogram
+    (`max_pm=403` top outlier) for a specialized fast path.
+
