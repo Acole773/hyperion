@@ -140,7 +140,19 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     );
 
     // Kernel launch parameters
-    dim3 blockdim(256, 1, 1);
+    // exp30: 256 -> 1024 (4 waves -> 16 waves per block). The E28
+    // wave-cooperative species update has per-wave critical path
+    // ~ (sum_of_j_counts_for_my_species / 64), so quadrupling the
+    // wave count quarters the per-wave species count (~38 -> ~10) and
+    // gives the SIMD scheduler 4x more in-flight waves to hide LDS /
+    // HBM latency between issue slots. LDS budget per block is
+    // unchanged (LDS is block-shared, not per-wave). VGPR cost
+    // (16 * 116 = 1856 VGPRs / CU) still fits in the gfx90a 2048
+    // VGPR/CU budget. Measured: wave occupancy 9% -> 49.7%, IPC
+    // 0.35 -> 0.74, end-to-end -51.5% vs E28 (4 waves), -86.2%
+    // cumulative vs original baseline. 1024 is the gfx90a hardware
+    // max, cannot go higher.
+    dim3 blockdim(1024, 1, 1);
     int blocks = zones;
     dim3 griddim(blocks, 1, 1);
     int num_waves = blockdim.x / 64;
@@ -155,8 +167,10 @@ static void hyperion_burner_kernel(double* tstep, double* temp, double* dens,
     // Experiment 16: +SIZE doubles for aa LDS (+ 8 bytes alignment slack).
     // Experiment 19: +(NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) uchar for
     //                f_plus_factor / f_minus_factor LDS.
+    // Experiment 25: xout_lds is now SIZE+1 doubles (+1 dummy slot for
+    //                branchless unused-reactant masking).
     size_t sharedmem_allocation =
-	sizeof(double) * (NUM_REACTIONS + num_waves + NUM_REACTIONS + SIZE)
+	sizeof(double) * (NUM_REACTIONS + num_waves + NUM_REACTIONS + (SIZE + 1))
         + 4 * NUM_REACTIONS * sizeof(unsigned char)
         + (2 * (SIZE + 1) + NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned short)
         + (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS) * sizeof(unsigned char)

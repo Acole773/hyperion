@@ -81,8 +81,13 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     double* flux       = smem;                              // NUM_REACTIONS
     double* reduce_buf = flux + NUM_REACTIONS;              // num_waves
     double* rate       = reduce_buf + num_waves_k;          // NUM_REACTIONS
-    double* xout_lds   = rate + NUM_REACTIONS;              // SIZE
-    unsigned char* nrs_lds  = (unsigned char*)(xout_lds + SIZE);  // NUM_REACTIONS bytes
+    // exp25: xout_lds is SIZE+1 doubles. xout_lds[SIZE] is a dummy slot
+    // initialized to 1.0 once per zone. The parser puts num_species (=SIZE)
+    // into reactant_1/2/3 for unused reactant slots, so the flux loop can
+    // unconditionally multiply by xout_zone[reactant_k] for k=1,2,3 without
+    // any branch or filter (multiply by 1.0 = identity).
+    double* xout_lds   = rate + NUM_REACTIONS;              // SIZE + 1
+    unsigned char* nrs_lds  = (unsigned char*)(xout_lds + (SIZE + 1));  // NUM_REACTIONS bytes
     unsigned char* r1_lds   = nrs_lds + NUM_REACTIONS;            // NUM_REACTIONS bytes
     unsigned char* r2_lds   = r1_lds  + NUM_REACTIONS;            // NUM_REACTIONS bytes
     unsigned char* r3_lds   = r2_lds  + NUM_REACTIONS;            // NUM_REACTIONS bytes
@@ -150,9 +155,12 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     
         // ------------------------------------------------------------
         // Initial normalization: xout = xin / aa
+        // exp25: also seed xout_zone[SIZE] = 1.0 (dummy slot for unused
+        //        reactant indices in the branchless flux loop).
         // ------------------------------------------------------------
         for (int i = tid; i < SIZE; i += blockDim.x)
             xout_zone[i] = xin_zone[i] / aa_zone[i];
+        if (tid == 0) xout_zone[SIZE] = 1.0;
     
         __syncthreads();
         // ------------------------------------------------------------
@@ -181,8 +189,11 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         // ------------------------------------------------------------
         // Rate evaluation
         // ------------------------------------------------------------
+        // exp27: read num_react_species from LDS (nrs_lds, uchar) instead of
+        // global memory. The LDS copy is already staged once at block entry,
+        // so this just routes the rate-eval load through LDS instead of HBM.
         for (int r = tid; r < NUM_REACTIONS; r += blockDim.x) {
-            int ns = num_react_species[r] - 1;
+            int ns = (int)nrs_lds[r] - 1;
             ns = max(0, min(ns, 2));
     
             rate[r] =
@@ -212,67 +223,105 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     
             // --------------------------------------------------------
             // Flux computation
+            //
+            // exp25 (branchless via dummy slot): the parser stores
+            // num_species (=SIZE) in reactant_k for unused slots, and
+            // xout_zone[SIZE] is initialized to 1.0 once per zone. So the
+            // load xout_zone[reactant_k] yields 1.0 for unused reactants
+            // and the genuine abundance otherwise, making the per-reaction
+            // multiply unconditional. nrs_lds[r] is no longer needed in
+            // the flux loop (saves 1 LDS load + 2 int->double conversions
+            // + 4 fma per reaction vs the exp21 filter form).
+            //
+            // The isfinite(f_rate) printf debug guard is also removed:
+            // it was a divergent branch executed every reaction.
             // --------------------------------------------------------
             for (int r = tid; r < NUM_REACTIONS; r += blockDim.x) {
-                double f_rate = rate[r];
-    	    // Check if the rate itself is the problem (e.g., T-dependent math failure)
-    	    if (!isfinite(f_rate)) {
-    	        printf("ZONE %d: Reaction %d RATE is NaN\n", blockIdx.x, r);
-    	    }
-    	    double f = f_rate;
-    	    int nrs = (int)nrs_lds[r];
-    	    if (nrs > 0) {
-    	        int idx1 = (int)r1_lds[r];
-    	        double abund1 = xout_zone[idx1];
-    	        f *= abund1;
-    	    }
-                if (nrs > 1) {
-                    int idx2 = (int)r2_lds[r];
-                    double abund2 = xout_zone[idx2];
-                    f *= abund2;
-                }
-                if (nrs > 2) {
-                    int idx3 = (int)r3_lds[r];
-                    double abund3 = xout_zone[idx3];
-                    f *= abund3;
-                }
-                flux[r] = f;
+                int idx1 = (int)r1_lds[r];
+                int idx2 = (int)r2_lds[r];
+                int idx3 = (int)r3_lds[r];
+                double a1 = xout_zone[idx1];
+                double a2 = xout_zone[idx2];
+                double a3 = xout_zone[idx3];
+                flux[r] = rate[r] * a1 * a2 * a3;
             }
     
             __syncthreads(); //this ensures all fluxes have been updated
     
             // --------------------------------------------------------
-            // Species updates
+            // Species updates  (exp32: sub-wave-cooperative,
+            //                          4 species per wave / 16 lanes each)
+            //
+            // E28's 64-lane reduction wasted lanes for the common case
+            // where a species has j-count < 64 — measured 47 % VALU
+            // active threads after E30's 16-waves-per-block change.
+            //
+            // E32 splits each wave into four 16-lane subwaves. Each
+            // subwave updates a different species concurrently with the
+            // other three subwaves in the same wave. j-loop strides by
+            // 16, the reduction is a 16-wide shfl_down (4 cycles), and
+            // the per-block species count drops from ~10 species per
+            // wave (E30) to ceil(SIZE / (4*num_waves)) per (wave,
+            // subwave). For SIZE=150 / blockDim=1024 this is 3 species
+            // per (wave, subwave).
+            //
+            // The 16-lane width was chosen empirically: 64-lane (E30,
+            // 6.428 s), 32-lane (E31, 3.260 s), 16-lane (E32, 3.022 s),
+            // 8-lane (E33, 4.282 s — regression). 16 matches the typical
+            // species j-count distribution for this network: most
+            // species have j-count ~10–30, so a 16-lane reduction lands
+            // near the lane-utilization sweet spot without paying for
+            // the per-species reduction/scalar-update overhead too
+            // many times.
+            //
+            // Caveat: the wave executes one PC, so the j-loop iteration
+            // count is determined by max(j_count over the four paired
+            // species). For widely mismatched groups the long-tail
+            // subwaves waste their lane budget. Sorting species by
+            // j-count to make balanced groups is a potential follow-up.
+            //
+            // Numerical impact: parallel reduction reorders the FP sums
+            // but stays bit-identical for this network (same as E28).
             // --------------------------------------------------------
-            for (int i = tid; i < SIZE; i += blockDim.x) {
-                // f_*_max carries a sentinel (-1) at [0] with real bounds at
-                // [i + 1], which removes the (i == 0) branch. Combined with the
-                // LDS-resident copies of f_*_max / f_*_map / f_*_factor.
-                int p0 = (int)fp_max_lds[i] + 1;
-                int m0 = (int)fm_max_lds[i] + 1;
-                int p1 = (int)fp_max_lds[i + 1];
-                int m1 = (int)fm_max_lds[i + 1];
-                double plus  = 0.0;
-                double minus = 0.0;
+            {
+                const int wave    = tid >> 6;
+                const int lane    = tid & 63;
+                const int subwave = lane >> 4;        // 0..3
+                const int sublane = lane & 15;        // 0..15
+                const int nw      = blockDim.x >> 6;
+                const int nsub    = nw << 2;          // 4 species per wave
 
-                for (int j = p0; j <= p1; ++j)
-                    plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
-                for (int j = m0; j <= m1; ++j)
-                    minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
-    
-    
-                // exp17: load xout_zone[i] once, work in a register, write
-                // once. Replaces 5 LDS loads + 1-2 LDS stores with 1 of each.
-                double x_i = xout_zone[i];
-                if (minus * dt > x_i) {
-                    x_i = (x_i + plus * dt) /
-                          (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
-                } else {
-                    x_i += (plus - minus) * dt;
+                for (int i = wave * 4 + subwave; i < SIZE; i += nsub) {
+                    int p0 = (int)fp_max_lds[i] + 1;
+                    int m0 = (int)fm_max_lds[i] + 1;
+                    int p1 = (int)fp_max_lds[i + 1];
+                    int m1 = (int)fm_max_lds[i + 1];
+
+                    double plus = 0.0;
+                    for (int j = p0 + sublane; j <= p1; j += 16)
+                        plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+                    for (int offset = 8; offset > 0; offset >>= 1)
+                        plus += __shfl_down(plus, offset, 16);
+
+                    double minus = 0.0;
+                    for (int j = m0 + sublane; j <= m1; j += 16)
+                        minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
+                    for (int offset = 8; offset > 0; offset >>= 1)
+                        minus += __shfl_down(minus, offset, 16);
+
+                    if (sublane == 0) {
+                        double x_i = xout_zone[i];
+                        if (minus * dt > x_i) {
+                            x_i = (x_i + plus * dt) /
+                                  (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
+                        } else {
+                            x_i += (plus - minus) * dt;
+                        }
+                        if (x_i < ZERO_FIX)
+                            x_i = ZERO_FIX;
+                        xout_zone[i] = x_i;
+                    }
                 }
-                if (x_i < ZERO_FIX)
-                    x_i = ZERO_FIX;
-                xout_zone[i] = x_i;
             }
             __syncthreads();
     

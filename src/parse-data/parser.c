@@ -137,7 +137,11 @@ void rate_library_create(char* filename, int size) {
             break;
         case 6:
             sscanf(line, "%d %d %d %d", &ii[0], &ii[1], &ii[2], &ii[3]);
-            reactant_idx[n] = malloc(sizeof(int) * 4);
+            // exp21: zero-initialize so unused reactant slots (mm >=
+            // num_react_species[n]) hold a safe valid index (0). Lets the
+            // GPU flux loop unconditionally load xout_zone[reactant_k[r]]
+            // and mask the contribution branchlessly.
+            reactant_idx[n] = calloc(4, sizeof(int));
             for (int mm = 0; mm < num_react_species[n]; mm++) {
                 reactant_idx[n][mm] = ii[mm];
             }
@@ -164,6 +168,25 @@ void rate_library_create(char* filename, int size) {
 
     return;
 }
+
+// exp25: must be called after BOTH rate_library_create() and network_create()
+// have run, since it depends on num_reactions, num_react_species (set by
+// rate_library_create) AND num_species (set by network_create).
+//
+// Replaces unused reactant indices (those beyond num_react_species[r]) with
+// the sentinel index num_species. The GPU kernel allocates one extra LDS
+// slot at xout_zone[num_species] initialized to 1.0, so unconditional loads
+// of xout_zone[reactant_k] yield the multiplicative identity for unused
+// slots. Removes 2 divergent branches per reaction in the flux loop.
+void rate_library_fixup_unused_reactants(void) {
+    for (int i = 0; i < num_reactions; i++) {
+        int nrs = num_react_species[i];
+        if (nrs < 1) reactant_1[i] = num_species;
+        if (nrs < 2) reactant_2[i] = num_species;
+        if (nrs < 3) reactant_3[i] = num_species;
+    }
+}
+
 
 #define PF_ALLOC_CHUNK 24
 
@@ -346,14 +369,14 @@ void data_init(void) {
     // related, and likewise f_minus_max and f_minus_min are related, we will
     // only need to pass f_plus_max and f_minus_max to the kernel.
 
-    // f_*_max and f_*_min both carry an extra leading sentinel element
-    // (f_*_max[0] = -1, f_*_min[0] = 0) so that callers can address the
-    // bounds for species i uniformly as f_*_max[i + 1] / f_*_min[i + 1]
+    // f_plus_max / f_minus_max have an extra leading sentinel element
+    // (f_*_max[0] = -1) so that callers can use the uniform expression
+    //     min = f_*_max[i] + 1;   max = f_*_max[i + 1];
     // without an (i == 0) special case. Array length is num_species + 1.
     f_plus_max = malloc(sizeof(int) * (num_species + 1));
-    f_plus_min = malloc(sizeof(int) * (num_species + 1));
+    f_plus_min = malloc(sizeof(int) * num_species);
     f_minus_max = malloc(sizeof(int) * (num_species + 1));
-    f_minus_min = malloc(sizeof(int) * (num_species + 1));
+    f_minus_min = malloc(sizeof(int) * num_species);
 
     // Create 1D arrays that will be used to map finite F+ and F- to the Flux
     // array.
@@ -400,20 +423,19 @@ void data_init(void) {
     }
 
     // Populate the f_plus_min and f_plus_max arrays.
-    // f_plus_max[0] = -1 and f_plus_min[0] = 0 are sentinels; the bounds
-    // for species i live at f_plus_max[i + 1] and f_plus_min[i + 1].
+    // f_plus_max[0] = -1 is a sentinel so that f_plus_max[i] + 1 yields the
+    // correct lower bound (== 0) for species i == 0 without a conditional.
+    // The "upper bound for species i" now lives at f_plus_max[i + 1].
     f_plus_max[0] = -1;
-    f_plus_min[0] = 0;
     for (int i = 0; i < num_species; i++) {
-        f_plus_min[i + 1] = f_plus_max[i] + 1;
-        f_plus_max[i + 1] = f_plus_min[i + 1] + f_plus_num[i] - 1;
+        f_plus_min[i] = f_plus_max[i] + 1;
+        f_plus_max[i + 1] = f_plus_min[i] + f_plus_num[i] - 1;
     }
     // Populate the f_minus_min and f_minus_max arrays (same sentinel scheme).
     f_minus_max[0] = -1;
-    f_minus_min[0] = 0;
     for (int i = 0; i < num_species; i++) {
-        f_minus_min[i + 1] = f_minus_max[i] + 1;
-        f_minus_max[i + 1] = f_minus_min[i + 1] + f_minus_num[i] - 1;
+        f_minus_min[i] = f_minus_max[i] + 1;
+        f_minus_max[i + 1] = f_minus_min[i] + f_minus_num[i] - 1;
     }
 
     // Populate the f_plus_factor and f_minus_factor arrays that
