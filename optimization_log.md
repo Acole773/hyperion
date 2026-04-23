@@ -1306,3 +1306,460 @@ overhead trumps the marginal lane-utilization gain.
 Sweet spot is **16 lanes / species** — matches the typical species
 j-count for this network (most species ~10–30 contributing fluxes).
 
+
+### Experiment 34 — `__restrict__` + const-correctness on kernel pointers
+
+**Intent**: free the compiler to reorder LDS / HBM loads and stores
+in the hot timestep loop without spurious aliasing pessimization.
+Up to E33 every kernel pointer parameter was a non-`const`
+`double*` / `int*`; the compiler must conservatively assume any
+two of those pointers could alias and is forced to insert ordering
+edges between unrelated reads/writes.
+
+**Change**: `src/hipcore/bn_burner_gpu.hip` and
+`src/hipcore/bn_burner_gpu.h` — add `__restrict__` and `const` to
+all kernel parameters except the three actually-written buffers
+(`xout`, `sdotrate`, `rate_g`). One downstream fix needed in the
+kernel body (`xin_zone` becomes `const double*`).
+
+**Build**: clean build green, 119 VGPR / 100 SGPR (unchanged from
+E32). ASM grew slightly 28 056 → 28 423 lines (+1.3 %), consistent
+with more aggressive reorder/scheduling across LDS reads.
+
+**Timing (104 zones, 2 iter, 2 runs)**:
+
+| run    | avg per-iter | cycles/zone-batch |
+|-------:|-------------:|------------------:|
+| 275701 | 2.9629 s | 69 798 976 |
+| 275702 | 2.9667 s | 69 889 128 |
+
+**Average E34**: **2.965 s** vs E32 3.022 s → **−1.9 %**.
+
+**Numerics**: bit-identical (`max relative diff = 0.000e+00`
+across all 104 sdot values).
+
+**Decision**: **KEPT**. Small but free win, code is also more
+self-documenting about which buffers are read-only vs written.
+Failure counter 1 → 0.
+
+
+### Experiment 35 — Hybrid scheduler: wave-coop for big species, sub-wave for small
+
+**Intent**: kill the dominant remaining divergence source in the
+species update. The 150-species network has a heavily skewed
+j-count distribution (measured via a one-shot histogram print
+added in `device_init`):
+
+| max(p,m) bin | species |
+|-------------:|--------:|
+| [0, 8)       | 29      |
+| [8, 16)      | 106     |
+| [16, 24)     | 11      |
+| [24, 32)     | 1       |
+| [32, 120)    | 0       |
+| [120, 128)   | 3       |
+
+`avg(p) = avg(m) ≈ 17`, but `max = 403`. Three species (indices
+0, 1, 4 in the 150-species set, with j-counts 328, 388, 403) are
+~30× the typical width.
+
+Under E32 (16-lane sub-wave packing) those three huge species sit
+in random sub-wave groups, and the *whole* wave then spins
+`ceil(403/16) = 26` inner j-iterations with 3/4 of its lanes
+idle (the other three species in that sub-wave group finish in 1
+iter). Across 3 huge species, this wastes roughly 25 ×
+(64 − 16) = 1 200 lane-iter slots per timestep.
+
+**Change**:
+
+1. `bn_burner_gpu.c` `device_init` — sort the species indices
+   descending by `max(plus_jcount, minus_jcount)` into a new
+   `species_perm[num_species]` device array (one allocation,
+   freed on `hip_killall_device_ptrs`). Sort is insertion sort,
+   called once.
+2. New kernel parameter `int phase1_count` chosen as
+   `num_waves` (= 16 with `blockDim=1024`) — exactly one big
+   species per wave in Phase 1.
+3. `bn_burner_gpu.hip` species update split into two phases:
+   - **Phase 1 (wave-cooperative)** — for `s in [0, phase1_count)`,
+     each wave processes `species_perm[s]` with all 64 lanes
+     cooperating: j-loop strided by 64, 6-stage 64-wide
+     `__shfl_down` reduction, scalar update on lane 0. This is
+     the same shape as E28 but applied only to the worst species.
+   - **Phase 2 (16-lane sub-wave)** — for the remaining
+     `SIZE - phase1_count` species (`species_perm[phase1_count..]`),
+     keep the E32 layout: `subwave = lane>>4`, `sublane = lane&15`,
+     j-stride 16, 4-stage 16-wide reduction, scalar update on
+     `sublane == 0`.
+4. The two phases write disjoint `xout_zone[]` slots so no
+   barrier is needed *between* them; the existing
+   `__syncthreads()` after the species update covers the next
+   timestep's flux read.
+
+**Cost**: +600 B device memory for `species_perm`, +1 LDS-coalesced
+int read per (wave, species) iteration. VGPRs +5 (119 → 124),
+still well under the 256/wave hardware limit (16 × 124 = 1 984
+VGPR/CU).
+
+**Timing (104 zones, 2 iter, 2 runs)**:
+
+| run    | avg per-iter | cycles/zone-batch |
+|-------:|-------------:|------------------:|
+| 275706 | 2.3533 s | 55 437 669 |
+| (rerun) | 2.3532 s | 55 436 901 |
+
+**Average E35**: **2.353 s** vs E34 2.965 s → **−20.6 %**.
+
+**Numerics**: bit-identical (`max relative diff = 0.000e+00`
+across all 104 sdot values).
+
+**Rocprof comparison E32 → E35** (104 zones, 14 iter,
+iteration-multiplexing):
+
+| metric                     | E32   | E35   | Δ |
+|----------------------------|------:|------:|---:|
+| avg time / iter            | 3.022 s | **2.353 s** | **−22.1 %** |
+| IPC (Executed)             | 0.56  | **0.80** | **+43 %** |
+| IPC (Issued)               | 0.88  | 0.84  | −5 % |
+| VALU Utilization           | n/a   | 35.79 % | — |
+| VALU Active Threads        | 55.86 % | 43.22 % | −23 % |
+| Wavefront Occupancy        | 49.7 % | 49.9 % | unchanged |
+| LDS Bank Conflicts/Access  | 0.14  | 0.11  | −21 % |
+| Theoretical LDS BW Utilized | n/a  | 50.52 % | — |
+| VGPRs                      | 120   | 124   | +4 |
+| SGPRs                      | 100   | 112   | +12 |
+
+The headline number — VALU active threads dropping from 55.9 % to
+43.2 % — looks like a regression but is not. Phase 1's
+wave-coop scalar update runs on **lane 0 only** (1/64 = 1.6 %
+active), and that pulls the whole-kernel average down even though
+the j-loop reductions in Phase 1 are now at 100 % lane activity
+for the 3 huge species. The metric that matters here is **IPC**:
+it jumped from 0.56 to 0.80 because the compiler can now pack
+genuinely useful instructions into every issue slot — the wave
+no longer stalls 25 cycles waiting on three idle sub-waves.
+
+**Decision**: **KEPT**. Largest single-experiment win since E32.
+Failure counter still 0.
+
+**Cumulative state at end of E35**:
+
+| metric                | original baseline | **E35**     | Δ |
+|-----------------------|------------------:|------------:|---:|
+| avg_gpu_time (104z, 2it) | 46.7017 s     | **2.353 s** | **−94.96 %** (~19.85× speedup) |
+| VGPRs                 | 117              | 124        | +7 |
+| Wavefront occupancy   | 4 waves/CU       | 16 waves/CU (49.9 %) | +4× |
+| IPC (Executed)        | low              | 0.80       | +8× |
+| LDS bank conflicts    | n/a              | 0.11       | very low |
+| Active CUs            | partial          | 100 %      | maxed |
+
+**Observations for next phase**:
+
+- IPC = 0.80 / 5.0 = 16 % of peak — still a 6× ceiling above us.
+- LDS bandwidth at ~50 % utilization — half the LDS capacity is
+  being left on the table; future wins likely involve either
+  packing more useful work into existing LDS reads or moving the
+  flux/rate working set to widen it.
+- VALU active threads is now dominated by Phase 1's lane-0 scalar
+  updates. Possible next directions:
+  1. Sweep `phase1_count` (8, 16, 24, 32) to see if a different
+     split between wave-coop and sub-wave is faster.
+  2. In Phase 1, parallelize the per-species scalar update across
+     lanes (each lane recomputes redundantly) so all 64 lanes stay
+     busy at the cost of duplicated scalar work.
+  3. Phase 2 still has the same intra-wave divergence as E32 —
+     could group sub-wave-paired species so j-counts within each
+     group of 4 are similar (sort + group, not full sort).
+  4. Pad sub-wave j-ranges to multiples of 16 with sentinel
+     `(fac=0, map=SIZE)` entries — no longer urgent for the huge
+     species, but might shave Phase 2 tail divergence.
+
+
+### Experiment 36 — `phase1_count` sweep (find optimal hybrid split)
+
+**Intent**: E35 picked `phase1_count = num_waves = 16` as a guess;
+the rocprof data showed VALU active threads *dropped* to 43.2 %
+(from 55.9 % at E32), driven mostly by Phase 1's lane-0 scalar
+update running with 63 idle lanes. Sweep the parameter to find the
+true optimum.
+
+**Mechanism**: added a `HYP_PHASE1` environment knob in
+`bn_burner_gpu.c` so we can test values without rebuilding between
+runs.
+
+**Sweep (104 zones, 2 iter, MI250)**:
+
+| phase1 | avg time | Δ vs E35 (phase1=16) |
+|-------:|---------:|--------:|
+| 0      | 3.134 s | +33.1 % |
+| 1      | 3.845 s | +63.4 % |
+| 2      | 3.561 s | +51.3 % |
+| 3      | 2.299 s |  −2.3 % |
+| **4**  | **2.296 s** | **−2.4 %** |
+| 6      | 2.311 s |  −1.8 % |
+| 8      | 2.330 s |  −1.0 % |
+| 16 (prev) | 2.354 s |  0 (reference) |
+| 24     | 2.517 s |  +6.9 % |
+| 32     | 2.711 s | +15.2 % |
+
+The curve has a sharp cliff between phase1=2 and phase1=3:
+`phase1 ∈ {0,1,2}` leaves at least one of the three huge species
+(j = 403, 388, 328) in Phase 2, where it blocks an entire
+sub-wave group on `ceil(403/16) = 26` inner iters with three of
+four sublanes idle. That single escapee costs more than *all three
+huge species' wave-coop overhead combined*.
+
+Above phase1 = 4 the curve rises gently: each extra species moved
+into Phase 1 pays the wave-coop scalar-update cost (lane 0 only =
+~30 cycles with 63 idle lanes) but removes a cheap sub-wave
+species. Net: each additional Phase-1 species buys very little
+Phase-2 savings but costs full Phase-1 overhead → monotonic
+regression past 4.
+
+**phase1 = 4 is both the minimum value that captures every huge
+species AND coincidentally matches the 4-species-per-wave Phase 2
+width.**
+
+**Change**: `bn_burner_gpu.c` default `phase1_count = 4` (with
+`HYP_PHASE1` still available for re-tuning on different networks).
+
+**Timing (confirmation, 104 zones, 2 iter, 2 runs)**:
+
+| run    | avg per-iter | cycles/zone-batch |
+|-------:|-------------:|------------------:|
+| 276565 | 2.2973 s | 54 119 113 |
+| 276566 | 2.2971 s | 54 114 166 |
+
+**Average E36**: **2.297 s** vs E35 2.353 s → **−2.4 %**.
+
+**Numerics**: bit-identical (`max relative diff = 0.000e+00`).
+
+**ASM**: unchanged (`.vgpr_count = 124`, `.sgpr_count = 100`,
+28 260 lines) since `phase1_count` is a runtime parameter.
+
+**Decision**: **KEPT**. The combined hybrid E35+E36 optimization
+is the final shape of the experimenter's "pick the right
+reduction width per species j-count" idea, and it beats every
+pure-width layout (E28 / E30 / E31 / E32) by a wide margin.
+
+**Cumulative state at end of E36**:
+
+| metric                | original baseline | **E36**     | Δ |
+|-----------------------|------------------:|------------:|---:|
+| avg_gpu_time (104z, 2it) | 46.7017 s     | **2.297 s** | **−95.08 %** (~20.33× speedup) |
+| VGPRs                 | 117              | 124        | +7 |
+| Wavefront occupancy   | 4 waves/CU       | 16 waves/CU (49.9 %) | +4× |
+| IPC (Executed)        | low              | ~0.80      | +8× |
+| LDS bank conflicts    | n/a              | 0.11       | very low |
+| Active CUs            | partial          | 100 %      | maxed |
+
+
+### Experiment 37 — Concurrent Phase 1 / Phase 2 dispatch (assign waves, not iters)
+
+**Intent**: In E35/E36 the two phases run *sequentially* —
+the whole block enters Phase 1, every wave iterates through
+`s < phase1_count` (most doing 0 iterations), then every wave
+enters Phase 2. With `phase1_count = 4` that means **12 of 16
+waves are sitting idle for the entire Phase 1 duration**
+(~7 j-iterations for the worst huge species), only to then
+join Phase 2. Big opportunity: the two phases write disjoint
+`xout_zone[]` slots so no intra-phase barrier is required;
+they can simply run on different wave sets at the same time.
+
+**Mechanism**: replace the two sequential `for` loops with a
+`if (wave < phase1_count) { /* P1 */ } else { /* P2 */ }`
+dispatch. Each Phase-1 wave now owns exactly one huge species
+(no stride-loop). Phase 2 reshapes to use only the remaining
+`nw_p2 = nw - phase1_count` waves (sub-wave slot count shrinks
+from `4*nw` = 64 to `4*nw_p2`). After the branch, a single
+`__syncthreads()` closes both phases.
+
+**Code change (`bn_burner_gpu.hip`, ~90 lines)**:
+
+```cpp
+if (wave < phase1_count) {
+    // Phase 1: wave-cooperative, one huge species per wave.
+    int i = species_perm[wave];
+    // ... 64-lane j-loop + 6-stage shfl + lane-0 scalar update ...
+} else {
+    // Phase 2: 16-lane sub-wave, uses only waves [phase1_count, nw).
+    const int nw_p2 = nw - phase1_count;
+    const int wave_p2 = wave - phase1_count;
+    const int nsub = nw_p2 << 2;
+    for (int s = wave_p2*4 + subwave; s < SIZE-phase1_count; s += nsub) {
+        // ... 16-lane j-loop + 4-stage shfl + sublane-0 scalar update ...
+    }
+}
+__syncthreads();
+```
+
+**Re-sweep `phase1_count` under the concurrent layout**:
+
+The optimal split shifts because each wave pulled into Phase 1
+now costs **one full wave's worth of Phase 2 throughput**, not
+just its own sequential time.
+
+| phase1 | avg time | Δ vs E36 (seq phase1=4) |
+|-------:|---------:|--------:|
+| **3**  | **1.740 s** | **−24.3 %** |
+| 4      | 1.885 s | −17.9 % |
+| 5      | 1.875 s | −18.4 % |
+| 6      | 1.901 s | −17.2 % |
+| 8      | 2.138 s |  −6.9 % |
+
+`phase1 = 3` — exactly the count of huge species — is the new
+optimum. Anything below 3 leaves a huge species in Phase 2 and
+blows up (same cliff as E36). Anything above 3 wastes a wave
+on a ≤25-j medium species that Phase 2 could absorb for free.
+
+**Change**: `bn_burner_gpu.c` default `phase1_count = 3`.
+
+**Timing (confirmation, 104 zones, 2 iter, 2 runs)**:
+
+| run    | avg per-iter | cycles/zone-batch |
+|-------:|-------------:|------------------:|
+| 276577 | 1.7387 s | 40 959 540 |
+| 276578 | 1.7364 s | 40 906 260 |
+
+**Average E37**: **1.738 s** vs E36 2.297 s → **−24.3 %**.
+
+**Numerics**: bit-identical (`max relative diff = 0.000e+00`).
+
+**ASM (`asm_e37/e37.s`)**: `.vgpr_count = 125` (+1 vs E36),
+`.sgpr_count = 100` (unchanged). Code size grew to 31 333 lines
+(+7.1 % vs E36) because the concurrent dispatch + one-species-
+per-wave unroll expanded the Phase 1 body. Occupancy unchanged
+(49.8 %).
+
+**Rocprof (`analysis_20260423_110129.txt`)**:
+
+| metric                    | E35   | **E37**   | Δ |
+|---------------------------|------:|----------:|--:|
+| IPC (Executed)            | 0.80  | **0.92**  | +15 % |
+| IPC (Issued)              | 0.75  | 0.86      | +15 % |
+| VALU Utilization          | 35.79 %| 41.38 %  | +15.6 % |
+| VALU Active Threads       | 43.22 %| 45.75 %  | +5.9 % |
+| Wavefront Occupancy       | 49.9 %| 49.8 %   | ≈ same |
+| Theoretical LDS BW        | 50.52 %| 53.91 % | +6.7 % |
+| LDS Bank Conflicts/Access | 0.11  | 0.15      | slight ↑ |
+
+Every metric moved in the right direction simultaneously:
+IPC shot up because there is now **always work available for
+every wave on every cycle**. The slight uptick in LDS bank
+conflicts is explained by the 12 Phase-2 waves now colliding
+on the same `fp_fac_lds[]` / `fm_fac_lds[]` pages as the 3
+Phase-1 waves.
+
+**Decision**: **KEPT**. Biggest single win since E28
+(sub-wave packing).
+
+**Cumulative state at end of E37**:
+
+| metric                | original baseline | **E37**     | Δ |
+|-----------------------|------------------:|------------:|---:|
+| avg_gpu_time (104z, 2it) | 46.7017 s     | **1.738 s** | **−96.28 %** (~26.87× speedup) |
+| VGPRs                 | 117              | 125        | +8 |
+| Wavefront occupancy   | 4 waves/CU       | 16 waves/CU (49.8 %) | +4× |
+| IPC (Executed)        | low              | **0.92**   | ≈10× |
+| LDS bank conflicts    | n/a              | 0.15       | very low |
+| VALU Utilization      | n/a              | 41.4 %     | — |
+
+
+**Observations for next phase**:
+
+- IPC 0.92 / 5.0 = 18 % of peak — ceiling still 5× above us.
+- Wavefront Occupancy stuck at **49.8 %** (16 waves/CU out of
+  possible 32). Block size (1024) + LDS (~51 KB) pin us to 1
+  block/CU. If we could shrink LDS below 32 KB we'd get 2
+  blocks/CU and likely another large jump. The biggest
+  candidates are `fp_map_lds` + `fm_map_lds` (NUM_FLUXES × 2
+  B ≈ 10.8 KB each direction? — actually total ~10.8 KB
+  combined) and `rate_g`/`flux` (2 × NUM_REACTIONS × 8 B =
+  25.6 KB). Moving `rate_g` to L1/L2 cache (it's read-only
+  and roughly the same latency) would free ~12.8 KB.
+- Phase 2 still has the same intra-sub-wave j-tail
+  divergence: wave 0 outer-iter 0 waits for `ceil(25/16)=2`
+  inner iters while sublanes 1-3 idle on iter 2. A 3-tier
+  scheduler (Phase 1 wave-coop / Phase 2a 32-lane 2×
+  species-per-wave / Phase 2b 16-lane sub-wave) could
+  recover that.
+- The flux loop's iter 2 tail-divergence (1604 reactions,
+  1024 threads, last 9-10 waves partial) is the only
+  remaining obvious source of lane-idle cycles outside the
+  species update.
+
+
+### Experiment 38 — Move `rate[]` back to global HBM (NEGATIVE)
+
+**Intent**: Incremental step toward the "2 blocks/CU"
+end-state. LDS currently sits at ~50 KB/block; reaching
+32 KB/block (the 2-blocks-per-CU threshold) would roughly
+double occupancy and IPC. `rate_g` is a read-only 12.8 KB
+array that would fit in the 16 KB L1 cache almost entirely,
+so replacing the LDS copy with a direct L1-cached load is
+the cheapest 12.8 KB to free.
+
+**Change**: dropped `rate[NUM_REACTIONS]` from the shared
+memory allocation in `bn_burner_gpu.c`; replaced the LDS
+symbol in the kernel with `rate = rate_g + zone *
+NUM_REACTIONS` so both the rate-eval loop and the flux loop
+now read from global. Saved 12.8 KB of LDS (50 KB → 37.2 KB).
+
+**Timing (104 zones, 2 iter, 2 runs)**:
+
+| run    | avg per-iter | cycles |
+|-------:|-------------:|-------:|
+| 276583 | 1.7859 s | 42 071 973 |
+| 276584 | 1.7860 s | 42 075 037 |
+
+**Average E38**: **1.786 s** vs E37 1.738 s → **+2.8 %
+regression**.
+
+**Numerics**: bit-identical.
+
+**Why it regressed**: the flux loop reads `rate[r]` once per
+reaction, interleaved with three `xout_zone[]` LDS loads and
+an `rX_lds[]` LDS load per reaction — the LDS path was
+already pipelining these five loads as a single LDS burst.
+Replacing one of them with a global/L1 load forces the wave
+to wait on a *different* memory subsystem (vmem queue vs lds
+queue), breaking the pipelined issue pattern and adding
+about 5-10 cycles of cross-queue latency per reaction. The
+LDS bank pressure freed was not useful: the freed 12.8 KB
+did not drop us below the 32 KB threshold for 2 blocks/CU
+(needed another ~5 KB), so there was no occupancy payoff
+either.
+
+**Sweep of `HYP_BLOCKDIM` on the reverted E37 code** (just to
+confirm 1024 is still optimal under the concurrent layout):
+
+| blockDim | avg time | Δ |
+|---------:|---------:|---:|
+|  512     | 2.791 s  | +60.6 % |
+|  768     | 1.993 s  | +14.7 % |
+|  896     | 1.842 s  |  +6.0 % |
+| **1024** | **1.738 s** | — |
+
+Monotonic: bigger is better up to the 1024 hardware cap.
+Smaller blocks don't help because they can't fit more blocks
+into a CU (LDS still 50 KB) while giving up parallelism.
+
+**Decision**: **REVERTED**. Lesson: to get a win from LDS
+trimming we need to cross the 32 KB threshold *in a single
+experiment*, not with incremental ~12 KB cuts. The only
+realistic path forward is to move both `rate` AND `flux` to
+global (saves 25.6 KB → 25 KB LDS → fits 2 blocks/CU) in one
+shot, accepting the per-reaction L1 cost because of the
+doubled occupancy. That is a much bigger refactor and carries
+real risk of L1 thrashing (each block's flux+rate working set
+is 25.6 KB, so 2 blocks/CU = 51 KB which exceeds the 16 KB
+L1 per CU → cache thrash). Deferred as high-risk.
+
+**Added infrastructure (kept in code base)**:
+
+- `HYP_BLOCKDIM` environment knob in `bn_burner_gpu.c` so
+  future block-size experiments don't need a rebuild between
+  runs (mirrors the `HYP_PHASE1` knob from E36).
+
+
+
