@@ -109,48 +109,72 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
     // unconditionally multiply by xout_zone[reactant_k] for k=1,2,3 without
     // any branch or filter (multiply by 1.0 = identity).
     double* xout_lds   = rate + NUM_REACTIONS;              // SIZE + 1
-    unsigned char* nrs_lds  = (unsigned char*)(xout_lds + (SIZE + 1));  // NUM_REACTIONS bytes
-    unsigned char* r1_lds   = nrs_lds + NUM_REACTIONS;            // NUM_REACTIONS bytes
-    unsigned char* r2_lds   = r1_lds  + NUM_REACTIONS;            // NUM_REACTIONS bytes
-    unsigned char* r3_lds   = r2_lds  + NUM_REACTIONS;            // NUM_REACTIONS bytes
+    // exp40: pack nrs, r1, r2, r3 (four uchars per reaction) into a single
+    // uint32 per reaction. The LDS footprint is identical (4 * NUM_REACTIONS
+    // bytes either way) because the four byte arrays were already adjacent,
+    // but now the flux loop reads all three reactant indices with one
+    // ds_read_b32 instead of three ds_read_u8 instructions (-2 LDS ops per
+    // reaction per timestep across the block). The once-per-zone rate
+    // eval loop still reads only the nrs byte via a masked extraction, so
+    // no extra LDS bandwidth is spent there.
+    //   byte 0 = reactant_1
+    //   byte 1 = reactant_2
+    //   byte 2 = reactant_3
+    //   byte 3 = num_react_species  (formerly nrs_lds)
+    unsigned int* rxns_lds = (unsigned int*)(xout_lds + (SIZE + 1));           // NUM_REACTIONS uint32s
     // Signed short so the leading sentinel (-1) at index 0 survives the cast.
     // Length is SIZE + 1 because f_*_max carries a sentinel at [0] and the
     // real upper bound for species i lives at [i + 1].
-    short* fp_max_lds = (short*)(r3_lds + NUM_REACTIONS);                      // SIZE + 1
+    short* fp_max_lds = (short*)(rxns_lds + NUM_REACTIONS);                    // SIZE + 1
     short* fm_max_lds = fp_max_lds + (SIZE + 1);                               // SIZE + 1
-    unsigned short* fp_map_lds = (unsigned short*)(fm_max_lds + (SIZE + 1));   // NUM_FLUXES_PLUS
-    unsigned short* fm_map_lds = fp_map_lds + NUM_FLUXES_PLUS;                 // NUM_FLUXES_MINUS
-    // exp19: pack f_plus_factor / f_minus_factor as uchar (small integer
-    // stoichiometric coefficients; uchar->double conversion is exact).
-    unsigned char* fp_fac_lds = (unsigned char*)(fm_map_lds + NUM_FLUXES_MINUS); // NUM_FLUXES_PLUS bytes
-    unsigned char* fm_fac_lds = fp_fac_lds + NUM_FLUXES_PLUS;                    // NUM_FLUXES_MINUS bytes
+    // exp39: pack f_plus_map (ushort) and f_plus_factor (uchar) into a
+    // single uint16 per j. Reaction indices are in [0, NUM_REACTIONS=1604)
+    // so the map fits in 12 bits; stoichiometric coefficients are small
+    // integers (<= 15 in this network) so the fac fits in 4 bits.
+    // Packed layout:
+    //   bits [11:0] = map value (reaction index)
+    //   bits [15:12] = fac value (stoichiometric coefficient)
+    // Benefits:
+    //   * inner j-loop drops from 2 independent LDS loads
+    //     (ds_read_u16 for map + ds_read_u8 for fac) to a single
+    //     ds_read_u16 load, reducing LDS issue-port pressure
+    //     (LDS ops were ~30 % of all issued instructions in E37).
+    //   * LDS footprint shrinks by (NUM_FLUXES_PLUS + NUM_FLUXES_MINUS)
+    //     bytes (about 5.3 KB for the 150-species network).
+    unsigned short* fp_pack_lds = (unsigned short*)(fm_max_lds + (SIZE + 1));  // NUM_FLUXES_PLUS
+    unsigned short* fm_pack_lds = fp_pack_lds + NUM_FLUXES_PLUS;               // NUM_FLUXES_MINUS
     // Pad to 8-byte alignment for the double aa_lds that follows.
-    double* aa_lds = (double*)(((uintptr_t)(fm_fac_lds + NUM_FLUXES_MINUS) + 7) & ~(uintptr_t)7);  // SIZE doubles
+    double* aa_lds = (double*)(((uintptr_t)(fm_pack_lds + NUM_FLUXES_MINUS) + 7) & ~(uintptr_t)7);  // SIZE doubles
     // exp11/12/13: pack reactant_1/2/3 as uchar (species idx < SIZE = 150).
     // exp14: pack f_plus_max / f_minus_max as ushort.
     // exp15: pack f_plus_map / f_minus_map as ushort. Values are reaction
     //        indices in [0, NUM_REACTIONS=1604) so ushort suffices.
 
     // Stage block-shared metadata into LDS once per block.
+    // exp40: pack nrs/r1/r2/r3 into one uint32 per reaction.
     for (int r = tid; r < NUM_REACTIONS; r += blockDim.x) {
-        nrs_lds[r] = (unsigned char)num_react_species[r];
-        r1_lds[r]  = (unsigned char)reactant_1[r];
-        r2_lds[r]  = (unsigned char)reactant_2[r];
-        r3_lds[r]  = (unsigned char)reactant_3[r];
+        unsigned r1 = (unsigned)reactant_1[r]        & 0xFFu;
+        unsigned r2 = (unsigned)reactant_2[r]        & 0xFFu;
+        unsigned r3 = (unsigned)reactant_3[r]        & 0xFFu;
+        unsigned ns = (unsigned)num_react_species[r] & 0xFFu;
+        rxns_lds[r] = r1 | (r2 << 8) | (r3 << 16) | (ns << 24);
     }
     for (int i = tid; i < SIZE + 1; i += blockDim.x) {
         fp_max_lds[i] = (short)f_plus_max[i];
         fm_max_lds[i] = (short)f_minus_max[i];
     }
-    for (int j = tid; j < NUM_FLUXES_PLUS; j += blockDim.x)
-        fp_map_lds[j] = (unsigned short)f_plus_map[j];
-    for (int j = tid; j < NUM_FLUXES_MINUS; j += blockDim.x)
-        fm_map_lds[j] = (unsigned short)f_minus_map[j];
-    // exp19: stage stoichiometric factors as uchar.
-    for (int j = tid; j < NUM_FLUXES_PLUS; j += blockDim.x)
-        fp_fac_lds[j] = (unsigned char)f_plus_factor[j];
-    for (int j = tid; j < NUM_FLUXES_MINUS; j += blockDim.x)
-        fm_fac_lds[j] = (unsigned char)f_minus_factor[j];
+    // exp39: stage (fac<<12 | map) packed into uint16 in one pass per side.
+    // Host validates that fac values fit in 4 bits, so the shift is safe.
+    for (int j = tid; j < NUM_FLUXES_PLUS; j += blockDim.x) {
+        unsigned map = (unsigned)f_plus_map[j];
+        unsigned fac = (unsigned)f_plus_factor[j];
+        fp_pack_lds[j] = (unsigned short)(((fac & 0xFu) << 12) | (map & 0x0FFFu));
+    }
+    for (int j = tid; j < NUM_FLUXES_MINUS; j += blockDim.x) {
+        unsigned map = (unsigned)f_minus_map[j];
+        unsigned fac = (unsigned)f_minus_factor[j];
+        fm_pack_lds[j] = (unsigned short)(((fac & 0xFu) << 12) | (map & 0x0FFFu));
+    }
     // exp16: aa[SIZE] is read in initial-norm, energy-reduce and final-norm
     //        - dozens of times per zone per timestep. Tiny LDS cost (1.2KB).
     for (int i = tid; i < SIZE; i += blockDim.x)
@@ -215,7 +239,8 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         // global memory. The LDS copy is already staged once at block entry,
         // so this just routes the rate-eval load through LDS instead of HBM.
         for (int r = tid; r < NUM_REACTIONS; r += blockDim.x) {
-            int ns = (int)nrs_lds[r] - 1;
+            // exp40: nrs lives in byte 3 of the packed rxns_lds uint32.
+            int ns = (int)(rxns_lds[r] >> 24) - 1;
             ns = max(0, min(ns, 2));
     
             rate[r] =
@@ -259,9 +284,11 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
             // it was a divergent branch executed every reaction.
             // --------------------------------------------------------
             for (int r = tid; r < NUM_REACTIONS; r += blockDim.x) {
-                int idx1 = (int)r1_lds[r];
-                int idx2 = (int)r2_lds[r];
-                int idx3 = (int)r3_lds[r];
+                // exp40: one ds_read_b32 delivers all three reactant indices.
+                unsigned rxns = rxns_lds[r];
+                int idx1 = (int)( rxns        & 0xFFu);
+                int idx2 = (int)((rxns >> 8)  & 0xFFu);
+                int idx3 = (int)((rxns >> 16) & 0xFFu);
                 double a1 = xout_zone[idx1];
                 double a2 = xout_zone[idx2];
                 double a3 = xout_zone[idx3];
@@ -357,22 +384,34 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
                     int m1 = (int)fm_max_lds[i + 1];
 
                     double plus = 0.0;
-                    for (int j = p0 + lane; j <= p1; j += 64)
-                        plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+                    for (int j = p0 + lane; j <= p1; j += 64) {
+                        unsigned pk = fp_pack_lds[j];
+                        plus += (double)(pk >> 12) * flux[(int)(pk & 0x0FFFu)];
+                    }
                     for (int offset = 32; offset > 0; offset >>= 1)
                         plus += __shfl_down(plus, offset, 64);
 
                     double minus = 0.0;
-                    for (int j = m0 + lane; j <= m1; j += 64)
-                        minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
+                    for (int j = m0 + lane; j <= m1; j += 64) {
+                        unsigned pk = fm_pack_lds[j];
+                        minus += (double)(pk >> 12) * flux[(int)(pk & 0x0FFFu)];
+                    }
                     for (int offset = 32; offset > 0; offset >>= 1)
                         minus += __shfl_down(minus, offset, 64);
 
                     if (lane == 0) {
                         double x_i = xout_zone[i];
                         if (minus * dt > x_i) {
-                            x_i = (x_i + plus * dt) /
-                                  (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
+                            // exp41: algebraically reduce two divisions to one.
+                            //   (x_i + plus*dt) / (1.0 + (minus/(x_i+ZERO_FIX))*dt)
+                            // = (x_i + plus*dt) * (x_i+ZERO_FIX) / (x_i+ZERO_FIX + minus*dt)
+                            // Double-precision division is ~30 cycles; this
+                            // halves the divisions per implicit-branch species
+                            // update. FP rounding is not bit-identical to the
+                            // original formulation, but stays well under the
+                            // 1e-12 relative-tolerance correctness budget.
+                            double d = x_i + ZERO_FIX;
+                            x_i = (x_i + plus * dt) * d / (d + minus * dt);
                         } else {
                             x_i += (plus - minus) * dt;
                         }
@@ -400,22 +439,27 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
                         int m1 = (int)fm_max_lds[i + 1];
 
                         double plus = 0.0;
-                        for (int j = p0 + sublane; j <= p1; j += 16)
-                            plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+                        for (int j = p0 + sublane; j <= p1; j += 16) {
+                            unsigned pk = fp_pack_lds[j];
+                            plus += (double)(pk >> 12) * flux[(int)(pk & 0x0FFFu)];
+                        }
                         for (int offset = 8; offset > 0; offset >>= 1)
                             plus += __shfl_down(plus, offset, 16);
 
                         double minus = 0.0;
-                        for (int j = m0 + sublane; j <= m1; j += 16)
-                            minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
+                        for (int j = m0 + sublane; j <= m1; j += 16) {
+                            unsigned pk = fm_pack_lds[j];
+                            minus += (double)(pk >> 12) * flux[(int)(pk & 0x0FFFu)];
+                        }
                         for (int offset = 8; offset > 0; offset >>= 1)
                             minus += __shfl_down(minus, offset, 16);
 
                         if (sublane == 0) {
                             double x_i = xout_zone[i];
                             if (minus * dt > x_i) {
-                                x_i = (x_i + plus * dt) /
-                                      (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
+                                // exp41: same 2->1 division reformulation as Phase 1.
+                                double d = x_i + ZERO_FIX;
+                                x_i = (x_i + plus * dt) * d / (d + minus * dt);
                             } else {
                                 x_i += (plus - minus) * dt;
                             }
