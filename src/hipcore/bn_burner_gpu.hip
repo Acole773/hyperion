@@ -56,13 +56,35 @@
 
 extern "C" __global__ void hyperion_burner_dev_kernel(
     int Nzones,
-    double* temp, double* dens, double* xin, double* xout, double* sdotrate,
-    double* prefactor, double* p_0, double* p_1,
-    double* p_2, double* p_3, double* p_4, double* p_5, double* p_6, double* aa,
-    double* q_value, int* reactant_1, int* reactant_2, int* reactant_3,
-    int* f_plus_map, int* f_minus_map, double* f_plus_factor,
-    double* f_minus_factor, int* f_plus_max, int* f_minus_max,
-    int* num_react_species, double* real_vals, double* rate_g){
+    const double* __restrict__ temp,
+    const double* __restrict__ dens,
+    const double* __restrict__ xin,
+    double*       __restrict__ xout,
+    double*       __restrict__ sdotrate,
+    const double* __restrict__ prefactor,
+    const double* __restrict__ p_0,
+    const double* __restrict__ p_1,
+    const double* __restrict__ p_2,
+    const double* __restrict__ p_3,
+    const double* __restrict__ p_4,
+    const double* __restrict__ p_5,
+    const double* __restrict__ p_6,
+    const double* __restrict__ aa,
+    const double* __restrict__ q_value,
+    const int*    __restrict__ reactant_1,
+    const int*    __restrict__ reactant_2,
+    const int*    __restrict__ reactant_3,
+    const int*    __restrict__ f_plus_map,
+    const int*    __restrict__ f_minus_map,
+    const double* __restrict__ f_plus_factor,
+    const double* __restrict__ f_minus_factor,
+    const int*    __restrict__ f_plus_max,
+    const int*    __restrict__ f_minus_max,
+    const int*    __restrict__ num_react_species,
+    const double* __restrict__ real_vals,
+    double*       __restrict__ rate_g,
+    const int*    __restrict__ species_perm,
+    int                          phase1_count){
 
     int tid = threadIdx.x;
 
@@ -147,7 +169,7 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
         // Experiment 09: xout_zone now lives in LDS for the duration of the
         // per-zone work (writeback to global at end of the zone loop body).
         double* xout_zone = xout_lds;
-        double* xin_zone  = xin  + zone * SIZE;
+        const double* xin_zone  = xin  + zone * SIZE;
     
         __shared__ double norm_sum;
         double t, dt, t_end;
@@ -283,33 +305,70 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
             // Numerical impact: parallel reduction reorders the FP sums
             // but stays bit-identical for this network (same as E28).
             // --------------------------------------------------------
+            //
+            // exp35: hybrid two-phase scheduler driven by the host-built
+            // species_perm[] (descending by max(plus j-count, minus j-count)).
+            //
+            //   Phase 1 (wave-cooperative, 64-lane reduction):
+            //     The first `phase1_count` species in perm[] are the highest
+            //     j-count species. One species per wave; all 64 lanes
+            //     cooperate on the j-loop strided by 64 and reduce via a
+            //     6-stage 64-wide shfl. This is the only way to keep all
+            //     lanes useful for the rare huge species (max j-count = 403
+            //     in the 150-species network) — under E32's 16-lane sub-wave
+            //     reduction those species would force ceil(403/16)=26 inner
+            //     iters with 3/4 of the lanes idle.
+            //
+            //   Phase 2 (sub-wave, 16-lane reduction):
+            //     The remaining (SIZE - phase1_count) species are processed
+            //     under the E32 layout: each wave splits into 4 16-lane
+            //     subwaves, processing 4 species concurrently with j-loop
+            //     stride 16 and a 4-stage 16-wide shfl. This is the right
+            //     width for the bulk of the network — 70% of species have
+            //     j-count in [8,16).
+            //
+            // The two phases write disjoint xout_zone slots so no barrier
+            // is required between them; the existing __syncthreads() at
+            // the end suffices for the next timestep.
+            //
+            // exp37: CONCURRENT phase dispatch. With phase1_count=4 the
+            // previous sequential code path left 12 of 16 waves idle
+            // during Phase 1. Assign waves 0..(phase1_count-1) to Phase 1
+            // and waves phase1_count..(nw-1) to Phase 2 so both phases
+            // run simultaneously on disjoint wave sets, and block time
+            // becomes max(Phase 1, Phase 2) instead of their sum. Phase 2
+            // now has fewer waves (nw_p2 = nw - phase1_count = 12) so its
+            // outer-iter count grows slightly (3 -> 4 for SIZE=150), but
+            // that cost is dwarfed by hiding Phase 1 behind Phase 2.
+            //
             {
                 const int wave    = tid >> 6;
                 const int lane    = tid & 63;
-                const int subwave = lane >> 4;        // 0..3
-                const int sublane = lane & 15;        // 0..15
                 const int nw      = blockDim.x >> 6;
-                const int nsub    = nw << 2;          // 4 species per wave
 
-                for (int i = wave * 4 + subwave; i < SIZE; i += nsub) {
+                if (wave < phase1_count) {
+                    // ---- Phase 1: wave-cooperative for the biggest species ----
+                    // Each of the first phase1_count waves processes exactly
+                    // one huge species with all 64 lanes cooperating.
+                    int i  = species_perm[wave];
                     int p0 = (int)fp_max_lds[i] + 1;
                     int m0 = (int)fm_max_lds[i] + 1;
                     int p1 = (int)fp_max_lds[i + 1];
                     int m1 = (int)fm_max_lds[i + 1];
 
                     double plus = 0.0;
-                    for (int j = p0 + sublane; j <= p1; j += 16)
+                    for (int j = p0 + lane; j <= p1; j += 64)
                         plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
-                    for (int offset = 8; offset > 0; offset >>= 1)
-                        plus += __shfl_down(plus, offset, 16);
+                    for (int offset = 32; offset > 0; offset >>= 1)
+                        plus += __shfl_down(plus, offset, 64);
 
                     double minus = 0.0;
-                    for (int j = m0 + sublane; j <= m1; j += 16)
+                    for (int j = m0 + lane; j <= m1; j += 64)
                         minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
-                    for (int offset = 8; offset > 0; offset >>= 1)
-                        minus += __shfl_down(minus, offset, 16);
+                    for (int offset = 32; offset > 0; offset >>= 1)
+                        minus += __shfl_down(minus, offset, 64);
 
-                    if (sublane == 0) {
+                    if (lane == 0) {
                         double x_i = xout_zone[i];
                         if (minus * dt > x_i) {
                             x_i = (x_i + plus * dt) /
@@ -320,6 +379,50 @@ extern "C" __global__ void hyperion_burner_dev_kernel(
                         if (x_i < ZERO_FIX)
                             x_i = ZERO_FIX;
                         xout_zone[i] = x_i;
+                    }
+                } else {
+                    // ---- Phase 2: 16-lane sub-wave packing for the rest ----
+                    // Uses only waves [phase1_count..nw), so the slot index
+                    // is (wave - phase1_count) * 4 + subwave out of a total
+                    // of (nw - phase1_count) * 4 slots.
+                    const int subwave = lane >> 4;        // 0..3
+                    const int sublane = lane & 15;        // 0..15
+                    const int nw_p2   = nw - phase1_count;
+                    const int nsub    = nw_p2 << 2;       // 4 species per wave
+                    const int wave_p2 = wave - phase1_count;
+                    const int small_count = SIZE - phase1_count;
+
+                    for (int s = wave_p2 * 4 + subwave; s < small_count; s += nsub) {
+                        int i  = species_perm[phase1_count + s];
+                        int p0 = (int)fp_max_lds[i] + 1;
+                        int m0 = (int)fm_max_lds[i] + 1;
+                        int p1 = (int)fp_max_lds[i + 1];
+                        int m1 = (int)fm_max_lds[i + 1];
+
+                        double plus = 0.0;
+                        for (int j = p0 + sublane; j <= p1; j += 16)
+                            plus += (double)fp_fac_lds[j] * flux[(int)fp_map_lds[j]];
+                        for (int offset = 8; offset > 0; offset >>= 1)
+                            plus += __shfl_down(plus, offset, 16);
+
+                        double minus = 0.0;
+                        for (int j = m0 + sublane; j <= m1; j += 16)
+                            minus += (double)fm_fac_lds[j] * flux[(int)fm_map_lds[j]];
+                        for (int offset = 8; offset > 0; offset >>= 1)
+                            minus += __shfl_down(minus, offset, 16);
+
+                        if (sublane == 0) {
+                            double x_i = xout_zone[i];
+                            if (minus * dt > x_i) {
+                                x_i = (x_i + plus * dt) /
+                                      (1.0 + (minus / (x_i + ZERO_FIX)) * dt);
+                            } else {
+                                x_i += (plus - minus) * dt;
+                            }
+                            if (x_i < ZERO_FIX)
+                                x_i = ZERO_FIX;
+                            xout_zone[i] = x_i;
+                        }
                     }
                 }
             }
